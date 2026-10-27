@@ -43,6 +43,7 @@ undetermined payback, calibrated into the model. They would also pin down the ba
 
 ```bash
 make setup     # fetch + checksum the data, create .venv from requirements.lock (needs uv)
+make eda       # exploratory analysis -> outputs/eda/ (summary JSON + figures)
 make fit-all   # fit the four model specifications (~25-35 min each on an 8-core laptop)
 make holdout   # refit the primary spec without the last 13 weeks and score the forecast
 make cv        # rolling-origin CV folds for the primary spec (train to week 104/117/130, forecast 13)
@@ -61,6 +62,25 @@ Everything in `outputs/` is a deterministic function of `config/pipeline.yaml`, 
 - Controls: competitor sales, sentiment, promo and organic impressions.
 - KPI: conversions. `revenue_per_conversion` is effectively constant (0.02, CV 0.5%), so revenue is
   conversions × 0.02.
+
+## Exploratory analysis
+
+`make eda` follows the EDA checklist of PyMC Labs' `mmm-modeling` skill and writes
+[`outputs/eda/eda_summary.json`](outputs/eda/eda_summary.json) plus figures.
+
+| Question | Finding | Bearing on the model |
+|---|---|---|
+| Enough data? | 156 weeks × 40 geos, balanced, no gaps | Above the skill's 150-week recommendation |
+| Trend? | National revenue +4.4% over 3 years; the fitted trend coefficient's interval spans 0 | Linear trend control is harmless but not needed |
+| Yearly seasonality? | Week-of-year means explain 36% of detrended national variance, vs 33% expected from pure noise (95th pct 42%); lag-52 autocorrelation 0.06 | No detectable seasonality. The fitted Fourier terms are ~1% of a typical week |
+| Noise | Within-geo weekly CV 0.30, lag-1 autocorrelation 0.02 | The noise floor behind the recalibrated accuracy gates |
+| Channel–revenue signal | Within-geo correlation of spend with revenue is −0.08 to +0.03; lagged 1–8 weeks, at most 0.04 | Very weak timing signal; no visible long carryover, consistent with short adstock |
+| Channel collinearity | Within-geo correlations 0.17–0.50; VIF ≤ 1.6 (national ≤ 2.4) | Channels are separable; collinearity is not the identification problem |
+| Geo size | Revenue r = 0.97 and spend r = 0.997 with population; spend per capita CV 3.6%; channel mix nearly identical across geos | Between-geo totals carry no media information: all of it comes from spend timing within geos (cross-geo timing correlation 0.18–0.33) |
+| Saturation range | Median geo-week spend is 18–40% of that geo's max; 90th percentile 58–70%; Channel2 is zero in 64% of geo-weeks | The upper part of each response curve is sparsely observed, so saturation leans on the prior |
+| Controls | Competitor sales (r = −0.20) and promo (+0.13) relate to revenue within geo; competitor, sentiment and organic correlate 0.41–0.55 with spend | Controls are confounders: how they are modeled feeds directly into media estimates |
+
+![National revenue and spend](outputs/eda/national_revenue_and_spend.png)
 
 ## Modeling choices
 
@@ -248,6 +268,9 @@ fit and convergence summaries, and package versions.
 - **Effect-size priors in the intended units.** The spend-share anchor was calibrated for per-geo scaling, so
   under the global scaling actually used, the prior is about 1.9× wider than described above. It is still weakly
   informative (the prior-implied ROI is reported), but it should be recalibrated.
+- **EDA-driven simplifications:** drop the yearly Fourier terms (no detectable seasonality) and the linear trend
+  (its coefficient's interval spans 0), and shorten adstock `l_max` from 8 to ~4 weeks (no carryover signal beyond
+  one or two weeks; fitted half-lives 0.2–1.2 weeks).
 - **Score holdout forecasts with CRPS,** which evaluates the whole predictive distribution, not just its mean.
 - **Meridian-style structure:** scale media and KPI by geo population, add shared weekly time effects to absorb
   national shocks, and put priors directly on ROI.

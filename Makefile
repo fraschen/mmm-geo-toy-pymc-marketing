@@ -4,15 +4,18 @@ PY := PYTHONPATH=src $(KEEPAWAKE) .venv/bin/python -u -W ignore
 SPECS := pooled geo_hierarchical prior_sensitivity hierarchical_prior_sensitivity
 PRIMARY := geo_hierarchical
 
-.PHONY: all setup data fit holdout cv fit-all gates results clean
+.PHONY: all setup data eda fit holdout cv fit-all gates results clean
 
-all: setup fit-all holdout cv gates results
+all: setup eda fit-all holdout cv gates results
 
 setup: data
 	uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.lock
 
 data:
 	./scripts/fetch_data.sh
+
+eda:            ## exploratory analysis -> outputs/eda/
+	$(PY) -m mmm.eda
 
 fit:            ## make fit SPEC=pooled
 	$(PY) -m mmm.run_spec --spec $(SPEC) 2>&1 | tee outputs/logs/$(SPEC).log
