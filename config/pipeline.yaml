@@ -62,18 +62,6 @@ specs:
     beta_prior: spend_share
     beta_pooling: hierarchical
     control_pooling: hierarchical
-  hier_media_hetero_controls:
-    description: Media effects partially pooled; only competitor and sentiment effects vary by geo (EDA heterogeneity test). Added after the first fits (ITERATIONS entry 2).
-    scaling: population
-    yearly_seasonality: null
-    l_max: 4
-    adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
-    saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
-    beta_prior: spend_share
-    beta_pooling: hierarchical
-    control_pooling: selective
-    heterogeneous_controls: [competitor_sales_control, sentiment_score_control]
-    control_centered: true
 
 # Automated acceptance criteria. FAIL on any blocking check => the fit is not
 # client-ready and `make gates` exits non-zero. WARN => reportable with caveats.

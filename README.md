@@ -77,7 +77,6 @@ raw data; no model was used.
 | **A. `pooled_media`** | One per channel, shared by all geos | Shared by all geos | Simplest. Channel mix and spend intensity are nearly identical across geos, so a common relative response is plausible |
 | **B. `hier_media`** | Partially pooled across geos (non-centered log-normal) | Shared by all geos | Meridian's default for geo models. Spend timing differs across geos, which can inform geo-level differences |
 | **C. `hier_media_controls`** | Partially pooled across geos | Partially pooled across geos (non-centered normal, one spread per control) | The controls are confounders (r up to 0.55 with spend), and the competitor and sentiment effects vary by geo (I² 0.94, 0.88). Forcing one value pushes that variation into the residuals and partly into media. Controls without heterogeneity shrink toward a shared value |
-| **C2. `hier_media_hetero_controls`** (added after the first fits) | Partially pooled across geos | Competitor and sentiment partially pooled (centered); promo, organic, trend effectively shared | C failed to sample. C2 lets vary only the controls the EDA found heterogeneous. See [ITERATIONS.md](ITERATIONS.md), entry 2 |
 
 ### Selection protocol (fixed before fitting)
 
@@ -131,6 +130,14 @@ From the EDA alone:
 - **Saturation is weakly identified.** The top of each response curve is rarely observed.
 - **Channel2 is often dark** (zero spend in 64% of geo-weeks).
 - **No ground truth in the CSV.** The data is simulated, but the true ROIs are not published alongside it.
+
+## Possible future enhancements
+
+- **Geo-varying effects for competitor sales and sentiment only.** The EDA shows these two control effects vary
+  by geo (I² 0.94 and 0.88), while promo, organic and trend do not. Both are confounders of spend, so sharing
+  them across geos can bias media ROI. pymc-marketing's `ControlMuEffect` can add them as a separate term with a
+  geo-varying (partially pooled) coefficient, leaving the other controls as one shared effect each. The model
+  input then has to be an `xr.Dataset` carrying those columns, for fitting and for out-of-sample prediction.
 
 ## Repository layout
 
