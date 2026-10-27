@@ -8,8 +8,8 @@ looking at plots.
 
 ## Verdict: is this good enough for a client?
 
-**Yes, with the caveats below.** The model is fit to inform channel and budget decisions, and its uncertainty
-is part of what it delivers. The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail; evidence in
+**Yes, with the caveats below.** The model is fit to inform channel and budget decisions. The automated gates
+return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail; evidence in
 [`reports/diagnostics.md`](reports/diagnostics.md) and [`outputs/gate_report.md`](outputs/gate_report.md)).
 
 **Why it can be shown.** The selected model (`hier_media`):
@@ -152,10 +152,9 @@ and were dropped without results ([`outputs/model_selection.md`](outputs/model_s
 | Report | Contents |
 |---|---|
 | [`reports/diagnostics.md`](reports/diagnostics.md) | Model health: data and prior checks, convergence (R-hat, ESS, rank plots, energy), in-sample fit and residuals, holdout and rolling-origin CV, ROI identification, limitations |
-| [`reports/measurement.md`](reports/measurement.md) | Channel ROI, marginal ROI and contribution with credible intervals; revenue decomposition; response curves; budget reallocation scenario |
+| [`reports/measurement.md`](reports/measurement.md) | Channel ROI, marginal ROI and contribution with credible intervals; revenue decomposition; response curves; budget reallocation scenarios; calibration with a hypothetical lift test |
 | [`outputs/channel_results.csv`](outputs/channel_results.csv) | One row per channel for downstream use; column definitions in `outputs/channel_results_metadata.json` |
 | [`outputs/budget_scenario.csv`](outputs/budget_scenario.csv) | Main reallocation scenario per channel; both scenarios in `budget_scenario.json` |
-| [`reports/measurement.md`](reports/measurement.md), section 5 | Calibration with a **hypothetical** Channel4 lift test (`data/lift_tests/`): how a real geo test would enter the model and move its estimates |
 
 ![Channel ROI](reports/figures/meas_roi.png)
 
