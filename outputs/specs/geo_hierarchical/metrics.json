@@ -1,0 +1,121 @@
+{
+  "run": "geo_hierarchical",
+  "spec": "geo_hierarchical",
+  "holdout": false,
+  "spec_config": {
+    "description": "Same as pooled but media effect size partially pooled across geos (non-centred log-normal).",
+    "l_max": 8,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "hierarchical"
+  },
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "data_checks": {
+    "missing_columns": [],
+    "n_rows": 6240,
+    "n_geos": 40,
+    "n_weeks": 156,
+    "balanced_panel": true,
+    "weekly_contiguous": true,
+    "n_missing_values": 0,
+    "negative_spend_cells": 0,
+    "negative_kpi_cells": 0,
+    "revenue_per_kpi_cv": 0.0049588969574893725,
+    "channel_zero_spend_share": {
+      "Channel0": 0.12099358974358974,
+      "Channel1": 0.2791666666666667,
+      "Channel2": 0.6426282051282052,
+      "Channel3": 0.027083333333333334,
+      "Channel4": 0.13141025641025642
+    },
+    "date_min": "2021-01-25",
+    "date_max": "2024-01-15"
+  },
+  "n_obs_fit": 6240,
+  "fit_minutes": 32.03,
+  "prior_predictive_coverage": 1.0,
+  "convergence": {
+    "rhat_max": 1.005034099544281,
+    "ess_bulk_min": 840.1357164767226,
+    "ess_tail_min": 1273.0464138981238,
+    "divergences": 0,
+    "divergence_rate": 0.0,
+    "bfmi_min": 0.7923227110738132,
+    "n_draws_total": 4000,
+    "rhat_by_var": {
+      "gamma_fourier": 1.0014129851794387,
+      "gamma_control": 1.0016395166038048,
+      "saturation_beta_raw_offset": 1.005034099544281,
+      "saturation_beta_raw_mu": 1.0014300760195671,
+      "intercept_contribution": 1.0022181487322528,
+      "y_sigma": 1.0038143693326984,
+      "adstock_alpha": 1.0034284415060202,
+      "saturation_lam": 1.0011831521726844,
+      "saturation_beta_raw_sigma": 1.0013874838720174,
+      "y_original_scale": 1.0038618342378716,
+      "yearly_seasonality_contribution_original_scale": 1.0024969425070032,
+      "intercept_contribution_original_scale": 1.002218159715704,
+      "control_contribution_original_scale": 1.0016452721366225,
+      "channel_contribution_original_scale": 1.0042905587647595,
+      "total_media_contribution_original_scale": 1.0013957197388947,
+      "mu": 1.003997205492692,
+      "yearly_seasonality_contribution": 1.0025109415496223,
+      "fourier_contribution": 1.0014129851794387,
+      "control_contribution": 1.0016452721366225,
+      "channel_contribution": 1.0042905587647595,
+      "saturation_beta": 1.0028487584510353,
+      "saturation_beta_raw": 1.003329321533855
+    },
+    "ess_bulk_by_var": {
+      "gamma_fourier": 3941.9348722419713,
+      "gamma_control": 3613.003508672643,
+      "saturation_beta_raw_offset": 1954.6345987819989,
+      "saturation_beta_raw_mu": 3428.957978983159,
+      "intercept_contribution": 1531.2132136348864,
+      "y_sigma": 5622.296053615111,
+      "adstock_alpha": 840.1357164767226,
+      "saturation_lam": 1960.336842421542,
+      "saturation_beta_raw_sigma": 3203.2277904193693,
+      "y_original_scale": 2960.921190922054,
+      "yearly_seasonality_contribution_original_scale": 3474.930456529677,
+      "intercept_contribution_original_scale": 1531.2132136348864,
+      "control_contribution_original_scale": 3613.003508672643,
+      "channel_contribution_original_scale": 864.804253753289,
+      "total_media_contribution_original_scale": 966.8399060785829,
+      "mu": 1235.8163522783418,
+      "yearly_seasonality_contribution": 3474.930456529677,
+      "fourier_contribution": 3941.9348722419713,
+      "control_contribution": 3613.003508672643,
+      "channel_contribution": 864.804253753289,
+      "saturation_beta": 1847.4224668851073,
+      "saturation_beta_raw": 1847.4224668851073
+    }
+  },
+  "fit": {
+    "r2": 0.7238634525450378,
+    "within_geo_r2": 0.14021100029034705,
+    "mape": 0.29474841455910517,
+    "ppc_interval_coverage": 0.9463141025641025,
+    "residual_acf1_median_abs": 0.045364617011883955
+  },
+  "loo": {
+    "elpd_loo": 7495.098893446235,
+    "elpd_loo_se": 67.72710054468702,
+    "pareto_k_bad_share": 0.0
+  }
+}

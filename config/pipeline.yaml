@@ -1,0 +1,90 @@
+# Single source of truth for the data mapping, model specifications, sampler
+# settings and automated acceptance thresholds. Everything in outputs/ is a
+# deterministic function of this file + data/raw + the pinned environment.
+
+data:
+  path: data/raw/geo_all_channels.csv
+  date_column: time
+  geo_column: geo
+  # KPI is conversions; revenue_per_conversion turns it into revenue so ROI is
+  # "incremental revenue per unit of spend".
+  kpi_column: conversions
+  revenue_per_kpi_column: revenue_per_conversion
+  target_column: revenue
+  channels: [Channel0, Channel1, Channel2, Channel3, Channel4]
+  # Controls enter the model as-is in pymc-marketing 0.18 (no internal scaling),
+  # so data.py rescales them; see README "Modeling choices".
+  controls: [competitor_sales_control, sentiment_score_control, Promo, Organic_channel0_impression, trend]
+  holdout_weeks: 13
+  # rolling-origin CV for the primary spec: train on the first N weeks, forecast the next 13.
+  # The last fold (143) is the holdout run.
+  cv_train_weeks: [104, 117, 130]
+
+sampler:
+  nuts_sampler: numpyro
+  chains: 4
+  tune: 1000
+  draws: 1000
+  target_accept: 0.95
+  random_seed: 20261027
+
+# The primary specification is what results/channel_results.csv reports.
+# The others exist only to test whether conclusions survive reasonable
+# alternative assumptions (do independent models agree?).
+primary_spec: geo_hierarchical
+specs:
+  pooled:
+    description: Media effects pooled across geos; pymc-marketing default global max scaling; geo intercepts; spend-share-informed effect priors.
+    l_max: 8
+    adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
+    saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
+    beta_prior: spend_share
+    beta_pooling: pooled
+  geo_hierarchical:
+    description: Same as pooled but media effect size partially pooled across geos (non-centred log-normal).
+    l_max: 8
+    adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
+    saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
+    beta_prior: spend_share
+    beta_pooling: hierarchical
+  prior_sensitivity:
+    description: Pooled, but equal (spend-agnostic) effect priors, longer and slower-decaying adstock, flatter saturation prior.
+    l_max: 12
+    adstock_alpha: {dist: Beta, alpha: 2, beta: 2}
+    saturation_lam: {dist: Gamma, alpha: 2, beta: 1}
+    beta_prior: equal
+    beta_pooling: pooled
+
+# Automated acceptance criteria. FAIL on any blocking check => the fit is not
+# client-ready and `make gates` exits non-zero. WARN => reportable with caveats.
+# Convergence thresholds follow current practice (Vehtari et al. 2021: R-hat<=1.01,
+# ESS>=400) with zero tolerated divergences, because these numbers go to a client.
+gates:
+  prior_predictive_coverage_min: 0.50        # share of observations inside the 94% prior predictive interval
+  prior_predictive_coverage_max: 1.00
+  rhat_max: 1.01
+  ess_bulk_min: 400
+  ess_tail_min: 400
+  divergences_max: 0
+  bfmi_min: 0.3
+  # Geo-week revenue is ~white noise around each geo's level (within-geo CV 0.30,
+  # lag-1 autocorrelation 0.02), so absolute geo-week accuracy thresholds would
+  # fail any model. Accuracy is judged relative to that noise floor instead.
+  # Initial thresholds, replaced after measuring the noise floor: in-sample
+  # MAPE <= 0.10, within-geo R2 >= 0.50 (blocking), holdout MAPE <= 0.15.
+  in_sample_r2_min: 0.60                     # pooled across geos (dominated by geo size)
+  within_geo_r2_min: 0.20                    # WARN only: share of within-geo variance explained (signal strength)
+  ppc_interval_coverage_min: 0.85            # 94% posterior predictive interval coverage of observed data
+  ppc_interval_coverage_max: 0.99
+  holdout_mape_degradation_max: 1.25         # holdout geo-week MAPE / in-sample MAPE
+  holdout_national_mape_max: 0.10            # weekly national total, where geo noise averages out
+  holdout_interval_coverage_min: 0.80
+  residual_acf1_max: 0.30                    # median absolute lag-1 residual autocorrelation across geos
+  pareto_k_bad_share_max: 0.01               # share of observations with PSIS-LOO Pareto k > 0.7
+  roi_prior_contraction_min: 0.30            # 1 - posterior_sd/prior_sd; below => ROI is prior-driven (WARN)
+  roi_breakeven_prob: 0.90                   # P(ROI>1) >= this or <= 1-this, else WARN: payback undetermined
+  cross_spec_roi_ratio_warn: 2.0             # max/min posterior-median ROI across specs
+  cross_spec_roi_ratio_fail: 5.0             # >5x = models conflict; no recommendation
+  cross_spec_rank_agreement_min: 0.6         # Spearman rho of channel ROI ranking between specs
+  cv_roi_ratio_warn: 2.0                      # max/min posterior-median ROI across CV folds + full fit
+  cv_roi_ratio_fail: 5.0

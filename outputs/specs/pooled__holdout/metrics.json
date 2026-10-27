@@ -1,0 +1,120 @@
+{
+  "run": "pooled__holdout",
+  "spec": "pooled",
+  "holdout": true,
+  "spec_config": {
+    "description": "Media effects pooled across geos; pymc-marketing default global max scaling; geo intercepts; spend-share-informed effect priors.",
+    "l_max": 8,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "pooled"
+  },
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "data_checks": {
+    "missing_columns": [],
+    "n_rows": 6240,
+    "n_geos": 40,
+    "n_weeks": 156,
+    "balanced_panel": true,
+    "weekly_contiguous": true,
+    "n_missing_values": 0,
+    "negative_spend_cells": 0,
+    "negative_kpi_cells": 0,
+    "revenue_per_kpi_cv": 0.0049588969574893725,
+    "channel_zero_spend_share": {
+      "Channel0": 0.12099358974358974,
+      "Channel1": 0.2791666666666667,
+      "Channel2": 0.6426282051282052,
+      "Channel3": 0.027083333333333334,
+      "Channel4": 0.13141025641025642
+    },
+    "date_min": "2021-01-25",
+    "date_max": "2024-01-15"
+  },
+  "n_obs_fit": 5720,
+  "fit_minutes": 16.37,
+  "prior_predictive_coverage": 1.0,
+  "convergence": {
+    "rhat_max": 1.005089191780809,
+    "ess_bulk_min": 244.2408592366328,
+    "ess_tail_min": 449.11241165876527,
+    "divergences": 0,
+    "divergence_rate": 0.0,
+    "bfmi_min": 0.9554098900836292,
+    "n_draws_total": 4000,
+    "rhat_by_var": {
+      "gamma_fourier": 1.0018844027440834,
+      "gamma_control": 1.0017765781473331,
+      "intercept_contribution": 1.0042057575204724,
+      "y_sigma": 1.004260273828476,
+      "adstock_alpha": 1.0022901258845673,
+      "saturation_lam": 1.000654765118985,
+      "saturation_beta": 1.0021878943740514,
+      "y_original_scale": 1.0033819158075459,
+      "yearly_seasonality_contribution_original_scale": 1.003600997631327,
+      "intercept_contribution_original_scale": 1.0042057575204724,
+      "control_contribution_original_scale": 1.001778774778493,
+      "channel_contribution_original_scale": 1.0035946628956198,
+      "total_media_contribution_original_scale": 1.005089191780809,
+      "mu": 1.004676780380887,
+      "yearly_seasonality_contribution": 1.003600997631327,
+      "fourier_contribution": 1.0018888940843187,
+      "control_contribution": 1.001778774778493,
+      "channel_contribution": 1.0035946628956198
+    },
+    "ess_bulk_by_var": {
+      "gamma_fourier": 1011.8090118070886,
+      "gamma_control": 2690.1751977584668,
+      "intercept_contribution": 374.46556570527827,
+      "y_sigma": 3933.901762543497,
+      "adstock_alpha": 1522.9541951527403,
+      "saturation_lam": 2994.658612284301,
+      "saturation_beta": 1276.4968221013073,
+      "y_original_scale": 3111.377473057635,
+      "yearly_seasonality_contribution_original_scale": 836.8378538159773,
+      "intercept_contribution_original_scale": 374.46556570527827,
+      "control_contribution_original_scale": 2690.1751977584668,
+      "channel_contribution_original_scale": 700.6391472229097,
+      "total_media_contribution_original_scale": 244.2408592366328,
+      "mu": 627.3967758216919,
+      "yearly_seasonality_contribution": 836.8378538159773,
+      "fourier_contribution": 1011.8090118070886,
+      "control_contribution": 2690.1751977584668,
+      "channel_contribution": 700.6391472229097
+    }
+  },
+  "fit": {
+    "r2": 0.6998053431179629,
+    "within_geo_r2": 0.06539941828587137,
+    "mape": 0.31063992067006724,
+    "ppc_interval_coverage": 0.9435314685314685,
+    "residual_acf1_median_abs": 0.06959250423431929
+  },
+  "loo": {
+    "elpd_loo": 6728.479012992776,
+    "elpd_loo_se": 65.34900814377963,
+    "pareto_k_bad_share": 0.0
+  },
+  "holdout_scores": {
+    "holdout_weeks": 13,
+    "holdout_mape": 0.30917777469918223,
+    "holdout_r2": 0.69016906960371,
+    "holdout_national_mape": 0.03914869350159947,
+    "holdout_interval_coverage": 0.926923076923077
+  }
+}

@@ -1,0 +1,15 @@
+Sampling: [adstock_alpha, gamma_control, gamma_fourier, intercept_contribution, saturation_beta_raw_mu, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_lam, y, y_sigma]
+[geo_hierarchical__cv117] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_fourier, gamma_control, adstock_alpha, saturation_lam, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_beta_raw_mu, intercept_contribution]
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[geo_hierarchical__cv117] sampled in 17.9 min
+Sampling: [y]
+Sampling: [y]
+[geo_hierarchical__cv117] holdout {'holdout_weeks': 13, 'holdout_mape': 0.30085113378605477, 'holdout_r2': 0.7115672360576493, 'holdout_national_mape': 0.0367491777443448, 'holdout_interval_coverage': 0.9403846153846154}
+[geo_hierarchical__cv117] done in 21.8 min -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/geo_hierarchical__cv117
+ channel  roi_median  roi_hdi94_low  roi_hdi94_high  mroi_median  roi_prior_contraction
+Channel0        0.80           0.29            1.79         0.74                   0.90
+Channel1        0.58           0.17            1.25         0.55                   0.92
+Channel2        1.54           0.71            2.99         1.44                   0.58
+Channel3        1.06           0.70            1.44         0.92                   0.96
+Channel4        0.82           0.52            1.10         0.77                   0.98

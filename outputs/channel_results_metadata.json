@@ -1,0 +1,75 @@
+{
+  "model_spec": "geo_hierarchical",
+  "spec_config": {
+    "description": "Same as pooled but media effect size partially pooled across geos (non-centred log-normal).",
+    "l_max": 8,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "hierarchical"
+  },
+  "gate_verdict": "FAIL",
+  "gate_counts": {
+    "n_pass": 82,
+    "n_warn": 18,
+    "n_fail": 1
+  },
+  "period": [
+    "2021-01-25",
+    "2024-01-15"
+  ],
+  "n_geos": 40,
+  "n_weeks": 156,
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "fit": {
+    "r2": 0.7238634525450378,
+    "within_geo_r2": 0.14021100029034705,
+    "mape": 0.29474841455910517,
+    "ppc_interval_coverage": 0.9463141025641025,
+    "residual_acf1_median_abs": 0.045364617011883955
+  },
+  "convergence": {
+    "rhat_max": 1.005034099544281,
+    "ess_bulk_min": 840.1357164767226,
+    "ess_tail_min": 1273.0464138981238,
+    "divergences": 0,
+    "divergence_rate": 0.0,
+    "bfmi_min": 0.7923227110738132,
+    "n_draws_total": 4000
+  },
+  "versions": {
+    "pymc-marketing": "1.3.0",
+    "pymc": "6.3.2",
+    "pytensor": "3.3.4",
+    "arviz": "1.3.0",
+    "numpyro": "0.22.0",
+    "jax": "0.12.0.1"
+  },
+  "column_definitions": {
+    "roi_*": "total incremental revenue over the period (zero-spend counterfactual, incl. adstock carryover) / total spend",
+    "mroi_*": "incremental revenue from the next 1% of spend / that 1% of spend, at the observed spend pattern",
+    "contribution_*": "incremental revenue attributed to the channel over the full period",
+    "prob_roi_gt_1": "posterior probability the channel returns more revenue than it costs",
+    "*_hdi94_*": "94% highest density interval of the posterior",
+    "roi_prior_*": "same quantity under the prior only; compare with posterior to see how much the data moved it",
+    "roi_prior_contraction": "1 - posterior sd / prior sd; near 0 = result is mostly prior",
+    "roi_median_{min,max}_across_specs": "range of posterior-median ROI over the alternative specifications",
+    "roi_median_{min,max}_across_cv_folds": "range of posterior-median ROI over rolling-origin CV fits (training windows ending at weeks 104, 117, 130, 143)",
+    "channel_gate_status": "worst automated-gate status among the checks specific to this channel",
+    "cost_per_incremental_conversion_median": "spend / median incremental conversions"
+  }
+}
