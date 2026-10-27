@@ -54,6 +54,13 @@ specs:
     saturation_lam: {dist: Gamma, alpha: 2, beta: 1}
     beta_prior: equal
     beta_pooling: pooled
+  hierarchical_prior_sensitivity:
+    description: Primary (partially pooled) structure with prior_sensitivity's priors -- equal effect anchors, longer slower-decaying adstock, flatter saturation prior.
+    l_max: 12
+    adstock_alpha: {dist: Beta, alpha: 2, beta: 2}
+    saturation_lam: {dist: Gamma, alpha: 2, beta: 1}
+    beta_prior: equal
+    beta_pooling: hierarchical
 
 # Automated acceptance criteria. FAIL on any blocking check => the fit is not
 # client-ready and `make gates` exits non-zero. WARN => reportable with caveats.
@@ -85,6 +92,11 @@ gates:
   roi_breakeven_prob: 0.90                   # P(ROI>1) >= this or <= 1-this, else WARN: payback undetermined
   cross_spec_roi_ratio_warn: 2.0             # max/min posterior-median ROI across specs
   cross_spec_roi_ratio_fail: 5.0             # >5x = models conflict; no recommendation
-  cross_spec_rank_agreement_min: 0.6         # Spearman rho of channel ROI ranking between specs
+  cross_spec_rank_agreement_min: 0.6         # Spearman rho of channel ROI ranking primary vs each comparator
+  # A comparator only counts if it passes its own blocking checks. A >5x ROI disagreement blocks
+  # only if the comparator fits about as well as the primary; if the primary's ELPD-LOO is higher by
+  # more than this margin, it is a WARN. Heuristic: pointwise LOO is not saved, so the SE of the
+  # ELPD difference is unavailable.
+  cross_spec_elpd_margin: 10
   cv_roi_ratio_warn: 2.0                      # max/min posterior-median ROI across CV folds + full fit
   cv_roi_ratio_fail: 5.0

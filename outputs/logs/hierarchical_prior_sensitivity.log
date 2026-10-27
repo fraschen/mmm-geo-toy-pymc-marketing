@@ -1,0 +1,13 @@
+Sampling: [adstock_alpha, gamma_control, gamma_fourier, intercept_contribution, saturation_beta_raw_mu, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_lam, y, y_sigma]
+[hierarchical_prior_sensitivity] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_fourier, gamma_control, adstock_alpha, saturation_lam, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_beta_raw_mu, intercept_contribution]
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[hierarchical_prior_sensitivity] sampled in 27.3 min
+Sampling: [y]
+[hierarchical_prior_sensitivity] done in 33.8 min -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/hierarchical_prior_sensitivity
+ channel  roi_median  roi_hdi94_low  roi_hdi94_high  mroi_median  roi_prior_contraction
+Channel0        1.18           0.45            1.97         1.14                   0.89
+Channel1        0.72           0.27            1.46         0.70                   0.91
+Channel2        1.82           1.01            2.80         1.77                   0.91
+Channel3        1.01           0.75            1.35         0.92                   0.93
+Channel4        0.75           0.52            0.98         0.72                   0.95

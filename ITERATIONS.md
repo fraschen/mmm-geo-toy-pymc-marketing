@@ -175,3 +175,39 @@ spend-share priors are recomputed inside each fold. Sampler unchanged (4 × 1000
 disagreement on Ch2 (5.25× between `pooled` and `geo_hierarchical`). The primary model is stable and well
 calibrated, but channel ROI depends on the pooling assumption, which the data cannot settle without experiments.
 Development stops here; see the README for next steps.
+
+## 6. Robustness rule revised; `hierarchical_prior_sensitivity` added (final)
+
+**Rule change (user decision).** Under the original cross-specification check, any spec could fail the
+primary, including one that had not converged. That let `pooled` (ESS 297) veto `geo_hierarchical`. New rule:
+- A comparator takes part only if it passes its own blocking checks. `pooled` is now skipped.
+- A > 5× ROI disagreement blocks only when the comparator fits about as well as the primary (ELPD within 10).
+  When the primary fits clearly better, it is a WARN. The margin is a heuristic: pointwise LOO was not saved.
+- Rankings are compared primary vs each comparator (WARN only).
+
+**New spec: `hierarchical_prior_sensitivity`.** The primary's partially pooled structure with
+`prior_sensitivity`'s priors: equal effect anchors, `l_max` 12, adstock `Beta(2,2)`, saturation λ
+`Gamma(2,1)`. It tests the primary's own prior choices, which no earlier spec did.
+
+| | R-hat | ESS bulk / tail | Div. | ELPD-LOO | Within-geo R² |
+|---|---|---|---|---|---|
+| `hierarchical_prior_sensitivity` | 1.0054 | 1241 / 1270 | 0 | 7494.2 | 0.139 |
+| `geo_hierarchical` (primary) | 1.0050 | 840 / 1273 | 0 | 7495.1 | 0.140 |
+
+| ROI median | Ch0 | Ch1 | Ch2 | Ch3 | Ch4 |
+|---|---|---|---|---|---|
+| `geo_hierarchical` | 0.95 | 0.64 | 1.81 | 1.00 | 0.75 |
+| `hierarchical_prior_sensitivity` | 1.18 | 0.72 | 1.82 | 1.01 | 0.75 |
+| ratio | 1.24 | 1.12 | 1.00 | 1.01 | 1.01 |
+
+**Findings:**
+- The primary's ROI is insensitive to its priors: same fit, every channel within 1.24×, ranking ρ = 0.9.
+- `prior_sensitivity` (fully pooled) still disagrees (Ch2 3.6×, Ch3 4.8×; ranking ρ = −0.3), but it fits about
+  177 ELPD worse, so this is reported as WARN.
+- The disagreement is about pooling (shared vs geo-varying media effects), not about priors.
+
+**Final gate verdict: PASS_WITH_WARNINGS** (107 pass, 22 warn, 0 fail, 1 skipped). The remaining warnings on the
+primary:
+- within-geo R² is 0.14 (weak weekly signal);
+- Ch0, Ch1 and Ch3 are undetermined around break-even;
+- comparisons with the fully pooled specs show disagreement.

@@ -1,9 +1,10 @@
 {
-  "verdict": "FAIL",
+  "verdict": "PASS_WITH_WARNINGS",
   "primary_spec": "geo_hierarchical",
-  "n_fail": 1,
-  "n_warn": 18,
-  "n_pass": 82,
+  "n_fail": 0,
+  "n_warn": 22,
+  "n_skip": 1,
+  "n_pass": 107,
   "sections": {
     "geo_hierarchical": [
       {
@@ -662,6 +663,225 @@
         "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
       }
     ],
+    "hierarchical_prior_sensitivity": [
+      {
+        "check": "data: required columns present",
+        "status": "PASS",
+        "value": [],
+        "threshold": null,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "data: balanced weekly panel, no missing values",
+        "status": "PASS",
+        "value": {
+          "balanced_panel": true,
+          "weekly_contiguous": true,
+          "n_missing_values": 0
+        },
+        "threshold": null,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "data: no negative spend or KPI",
+        "status": "PASS",
+        "value": 0,
+        "threshold": null,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "prior predictive coverage",
+        "status": "PASS",
+        "value": 1.0,
+        "threshold": [
+          0.5,
+          1.0
+        ],
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "R-hat max",
+        "status": "PASS",
+        "value": 1.0054,
+        "threshold": 1.01,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "ESS bulk min",
+        "status": "PASS",
+        "value": 1241,
+        "threshold": 400,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "ESS tail min",
+        "status": "PASS",
+        "value": 1270,
+        "threshold": 400,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "divergences",
+        "status": "PASS",
+        "value": 0,
+        "threshold": 0,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "E-BFMI min",
+        "status": "PASS",
+        "value": 0.739,
+        "threshold": 0.3,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "in-sample R2",
+        "status": "PASS",
+        "value": 0.7233,
+        "threshold": 0.6,
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "within-geo R2 (signal strength)",
+        "status": "WARN",
+        "value": 0.1386,
+        "threshold": 0.2,
+        "blocking": false,
+        "detail": "share of week-to-week variance within a geo the model explains; low = weak media signal"
+      },
+      {
+        "check": "94% PPC interval coverage",
+        "status": "PASS",
+        "value": 0.947,
+        "threshold": [
+          0.85,
+          0.99
+        ],
+        "blocking": true,
+        "detail": ""
+      },
+      {
+        "check": "residual lag-1 autocorrelation (median |acf1| across geos)",
+        "status": "PASS",
+        "value": 0.048,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": ""
+      },
+      {
+        "check": "PSIS-LOO Pareto k > 0.7 share",
+        "status": "PASS",
+        "value": 0.0,
+        "threshold": 0.01,
+        "blocking": false,
+        "detail": ""
+      },
+      {
+        "check": "ROI identified by data, not prior: Channel0",
+        "status": "PASS",
+        "value": 0.892,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": "1 - posterior sd / prior sd of ROI"
+      },
+      {
+        "check": "ROI clearly above or below break-even: Channel0",
+        "status": "WARN",
+        "value": 0.654,
+        "threshold": [
+          0.1,
+          0.9
+        ],
+        "blocking": false,
+        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+      },
+      {
+        "check": "ROI identified by data, not prior: Channel1",
+        "status": "PASS",
+        "value": 0.912,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": "1 - posterior sd / prior sd of ROI"
+      },
+      {
+        "check": "ROI clearly above or below break-even: Channel1",
+        "status": "WARN",
+        "value": 0.218,
+        "threshold": [
+          0.1,
+          0.9
+        ],
+        "blocking": false,
+        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+      },
+      {
+        "check": "ROI identified by data, not prior: Channel2",
+        "status": "PASS",
+        "value": 0.906,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": "1 - posterior sd / prior sd of ROI"
+      },
+      {
+        "check": "ROI clearly above or below break-even: Channel2",
+        "status": "PASS",
+        "value": 0.981,
+        "threshold": [
+          0.1,
+          0.9
+        ],
+        "blocking": false,
+        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+      },
+      {
+        "check": "ROI identified by data, not prior: Channel3",
+        "status": "PASS",
+        "value": 0.925,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": "1 - posterior sd / prior sd of ROI"
+      },
+      {
+        "check": "ROI clearly above or below break-even: Channel3",
+        "status": "WARN",
+        "value": 0.521,
+        "threshold": [
+          0.1,
+          0.9
+        ],
+        "blocking": false,
+        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+      },
+      {
+        "check": "ROI identified by data, not prior: Channel4",
+        "status": "PASS",
+        "value": 0.952,
+        "threshold": 0.3,
+        "blocking": false,
+        "detail": "1 - posterior sd / prior sd of ROI"
+      },
+      {
+        "check": "ROI clearly above or below break-even: Channel4",
+        "status": "PASS",
+        "value": 0.022,
+        "threshold": [
+          0.1,
+          0.9
+        ],
+        "blocking": false,
+        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+      }
+    ],
     "geo_hierarchical (time holdout)": [
       {
         "check": "holdout geo-week MAPE vs in-sample (no degradation)",
@@ -851,7 +1071,15 @@
     ],
     "cross-specification agreement": [
       {
-        "check": "ROI stable across specs: Channel0",
+        "check": "pooled: comparator admissible",
+        "status": "SKIP",
+        "value": false,
+        "threshold": "passes own blocking checks",
+        "blocking": true,
+        "detail": "excluded: fails its own blocking checks, so it cannot veto the primary"
+      },
+      {
+        "check": "prior_sensitivity: ROI agrees with primary: Channel0",
         "status": "PASS",
         "value": 1.81,
         "threshold": [
@@ -859,32 +1087,32 @@
           5.0
         ],
         "blocking": false,
-        "detail": "geo_hierarchical=0.95, pooled=1.21, prior_sensitivity=1.73"
+        "detail": "geo_hierarchical=0.95, prior_sensitivity=1.73; primary ELPD +177"
       },
       {
-        "check": "ROI stable across specs: Channel1",
+        "check": "prior_sensitivity: ROI agrees with primary: Channel1",
         "status": "PASS",
-        "value": 1.08,
+        "value": 1.02,
         "threshold": [
           2.0,
           5.0
         ],
         "blocking": false,
-        "detail": "geo_hierarchical=0.64, pooled=0.67, prior_sensitivity=0.62"
+        "detail": "geo_hierarchical=0.64, prior_sensitivity=0.62; primary ELPD +177"
       },
       {
-        "check": "ROI stable across specs: Channel2",
-        "status": "FAIL",
-        "value": 5.25,
+        "check": "prior_sensitivity: ROI agrees with primary: Channel2",
+        "status": "WARN",
+        "value": 3.57,
         "threshold": [
           2.0,
           5.0
         ],
-        "blocking": true,
-        "detail": "geo_hierarchical=1.81, pooled=0.35, prior_sensitivity=0.51"
+        "blocking": false,
+        "detail": "geo_hierarchical=1.81, prior_sensitivity=0.51; primary ELPD +177"
       },
       {
-        "check": "ROI stable across specs: Channel3",
+        "check": "prior_sensitivity: ROI agrees with primary: Channel3",
         "status": "WARN",
         "value": 4.78,
         "threshold": [
@@ -892,29 +1120,21 @@
           5.0
         ],
         "blocking": false,
-        "detail": "geo_hierarchical=1.00, pooled=0.22, prior_sensitivity=0.21"
+        "detail": "geo_hierarchical=1.00, prior_sensitivity=0.21; primary ELPD +177"
       },
       {
-        "check": "ROI stable across specs: Channel4",
+        "check": "prior_sensitivity: ROI agrees with primary: Channel4",
         "status": "WARN",
-        "value": 4.08,
+        "value": 2.53,
         "threshold": [
           2.0,
           5.0
         ],
         "blocking": false,
-        "detail": "geo_hierarchical=0.75, pooled=0.18, prior_sensitivity=0.30"
+        "detail": "geo_hierarchical=0.75, prior_sensitivity=0.30; primary ELPD +177"
       },
       {
-        "check": "ROI ranking agrees: geo_hierarchical vs pooled",
-        "status": "WARN",
-        "value": -0.1,
-        "threshold": 0.6,
-        "blocking": false,
-        "detail": ""
-      },
-      {
-        "check": "ROI ranking agrees: geo_hierarchical vs prior_sensitivity",
+        "check": "prior_sensitivity: ROI ranking agrees with primary",
         "status": "WARN",
         "value": -0.3,
         "threshold": 0.6,
@@ -922,7 +1142,62 @@
         "detail": ""
       },
       {
-        "check": "ROI ranking agrees: pooled vs prior_sensitivity",
+        "check": "hierarchical_prior_sensitivity: ROI agrees with primary: Channel0",
+        "status": "PASS",
+        "value": 1.24,
+        "threshold": [
+          2.0,
+          5.0
+        ],
+        "blocking": false,
+        "detail": "geo_hierarchical=0.95, hierarchical_prior_sensitivity=1.18; primary ELPD +1"
+      },
+      {
+        "check": "hierarchical_prior_sensitivity: ROI agrees with primary: Channel1",
+        "status": "PASS",
+        "value": 1.12,
+        "threshold": [
+          2.0,
+          5.0
+        ],
+        "blocking": false,
+        "detail": "geo_hierarchical=0.64, hierarchical_prior_sensitivity=0.72; primary ELPD +1"
+      },
+      {
+        "check": "hierarchical_prior_sensitivity: ROI agrees with primary: Channel2",
+        "status": "PASS",
+        "value": 1.0,
+        "threshold": [
+          2.0,
+          5.0
+        ],
+        "blocking": false,
+        "detail": "geo_hierarchical=1.81, hierarchical_prior_sensitivity=1.82; primary ELPD +1"
+      },
+      {
+        "check": "hierarchical_prior_sensitivity: ROI agrees with primary: Channel3",
+        "status": "PASS",
+        "value": 1.01,
+        "threshold": [
+          2.0,
+          5.0
+        ],
+        "blocking": false,
+        "detail": "geo_hierarchical=1.00, hierarchical_prior_sensitivity=1.01; primary ELPD +1"
+      },
+      {
+        "check": "hierarchical_prior_sensitivity: ROI agrees with primary: Channel4",
+        "status": "PASS",
+        "value": 1.01,
+        "threshold": [
+          2.0,
+          5.0
+        ],
+        "blocking": false,
+        "detail": "geo_hierarchical=0.75, hierarchical_prior_sensitivity=0.75; primary ELPD +1"
+      },
+      {
+        "check": "hierarchical_prior_sensitivity: ROI ranking agrees with primary",
         "status": "PASS",
         "value": 0.9,
         "threshold": 0.6,

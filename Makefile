@@ -1,7 +1,7 @@
 # On macOS, keep the machine from sleeping while a fit runs (no-op elsewhere)
 KEEPAWAKE := $(shell command -v caffeinate >/dev/null 2>&1 && echo caffeinate -i -s)
 PY := PYTHONPATH=src $(KEEPAWAKE) .venv/bin/python -u -W ignore
-SPECS := pooled geo_hierarchical prior_sensitivity
+SPECS := pooled geo_hierarchical prior_sensitivity hierarchical_prior_sensitivity
 PRIMARY := geo_hierarchical
 
 .PHONY: all setup data fit holdout cv fit-all gates results clean

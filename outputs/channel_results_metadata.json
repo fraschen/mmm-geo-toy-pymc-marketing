@@ -16,11 +16,11 @@
     "beta_prior": "spend_share",
     "beta_pooling": "hierarchical"
   },
-  "gate_verdict": "FAIL",
+  "gate_verdict": "PASS_WITH_WARNINGS",
   "gate_counts": {
-    "n_pass": 82,
-    "n_warn": 18,
-    "n_fail": 1
+    "n_pass": 107,
+    "n_warn": 22,
+    "n_fail": 0
   },
   "period": [
     "2021-01-25",

@@ -17,18 +17,19 @@ import pandas as pd  # noqa: E402
 
 from .config import OUTPUTS, load_config  # noqa: E402
 
-SPEC_COLORS = ["#2a78d6", "#eb6834", "#1baf7a"]  # categorical slots 1-3, fixed order
+SPEC_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]  # categorical slots 1-4, fixed order
 
 
-def roi_figure(chans: dict[str, pd.DataFrame], path) -> None:
+def roi_figure(chans: dict[str, pd.DataFrame], path, excluded: set[str] = frozenset()) -> None:
     channels = next(iter(chans.values()))["channel"].tolist()
-    fig, ax = plt.subplots(figsize=(7.5, 4.2), dpi=150)
+    fig, ax = plt.subplots(figsize=(7.5, 5.0), dpi=150)
     n = len(chans)
     for i, (spec, df) in enumerate(chans.items()):
         d = df.set_index("channel").loc[channels]
-        y = [k + (i - (n - 1) / 2) * 0.22 for k in range(len(channels))]
+        y = [k + (i - (n - 1) / 2) * 0.19 for k in range(len(channels))]
         ax.hlines(y, d.roi_hdi94_low, d.roi_hdi94_high, color=SPEC_COLORS[i], lw=2)
-        ax.plot(d.roi_median, y, "o", ms=7, color=SPEC_COLORS[i], mec="white", mew=1.5, label=spec)
+        ax.plot(d.roi_median, y, "o", ms=7, color=SPEC_COLORS[i], mec="white", mew=1.5,
+                label=f"{spec} (excluded: not converged)" if spec in excluded else spec)
     ax.axvline(1.0, color="#8a8a85", lw=1, ls="--")
     ax.text(1.0, -0.55, " break-even", color="#5f5e5a", fontsize=8, va="bottom")
     ax.set_yticks(range(len(channels)), channels)
@@ -116,7 +117,8 @@ def main() -> None:
     (OUTPUTS / "channel_results_metadata.json").write_text(json.dumps(meta, indent=2, default=float))
 
     (OUTPUTS / "figures").mkdir(exist_ok=True)
-    roi_figure(chans, OUTPUTS / "figures" / "roi_by_spec.png")
+    excluded = {r["check"].split(":")[0] for r in checks if r["status"] == "SKIP"}
+    roi_figure(chans, OUTPUTS / "figures" / "roi_by_spec.png", excluded)
     print(res[lead[:8]].round(3).to_string(index=False))
 
 

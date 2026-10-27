@@ -1,6 +1,6 @@
-# Gate report: **FAIL**
+# Gate report: **PASS_WITH_WARNINGS**
 
-82 pass, 18 warn, 1 fail. Primary spec: `geo_hierarchical`.
+107 pass, 22 warn, 0 fail, 1 skipped. Primary spec: `geo_hierarchical`.
 
 ## geo_hierarchical
 
@@ -89,6 +89,35 @@
 | PASS | ROI identified by data, not prior: Channel4 | 0.83 | 0.3 | 1 - posterior sd / prior sd of ROI |
 | PASS | ROI clearly above or below break-even: Channel4 | 0.083 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
 
+## hierarchical_prior_sensitivity
+
+| status | check | value | threshold | detail |
+|---|---|---|---|---|
+| PASS | data: required columns present | [] |  |  |
+| PASS | data: balanced weekly panel, no missing values | {'balanced_panel': True, 'weekly_contiguous': True, 'n_missing_values': 0} |  |  |
+| PASS | data: no negative spend or KPI | 0 |  |  |
+| PASS | prior predictive coverage | 1.0 | [0.5, 1.0] |  |
+| PASS | R-hat max | 1.0054 | 1.01 |  |
+| PASS | ESS bulk min | 1241 | 400 |  |
+| PASS | ESS tail min | 1270 | 400 |  |
+| PASS | divergences | 0 | 0 |  |
+| PASS | E-BFMI min | 0.739 | 0.3 |  |
+| PASS | in-sample R2 | 0.7233 | 0.6 |  |
+| WARN | within-geo R2 (signal strength) | 0.1386 | 0.2 | share of week-to-week variance within a geo the model explains; low = weak media signal |
+| PASS | 94% PPC interval coverage | 0.947 | [0.85, 0.99] |  |
+| PASS | residual lag-1 autocorrelation (median |acf1| across geos) | 0.048 | 0.3 |  |
+| PASS | PSIS-LOO Pareto k > 0.7 share | 0.0 | 0.01 |  |
+| PASS | ROI identified by data, not prior: Channel0 | 0.892 | 0.3 | 1 - posterior sd / prior sd of ROI |
+| WARN | ROI clearly above or below break-even: Channel0 | 0.654 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+| PASS | ROI identified by data, not prior: Channel1 | 0.912 | 0.3 | 1 - posterior sd / prior sd of ROI |
+| WARN | ROI clearly above or below break-even: Channel1 | 0.218 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+| PASS | ROI identified by data, not prior: Channel2 | 0.906 | 0.3 | 1 - posterior sd / prior sd of ROI |
+| PASS | ROI clearly above or below break-even: Channel2 | 0.981 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+| PASS | ROI identified by data, not prior: Channel3 | 0.925 | 0.3 | 1 - posterior sd / prior sd of ROI |
+| WARN | ROI clearly above or below break-even: Channel3 | 0.521 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+| PASS | ROI identified by data, not prior: Channel4 | 0.952 | 0.3 | 1 - posterior sd / prior sd of ROI |
+| PASS | ROI clearly above or below break-even: Channel4 | 0.022 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+
 ## geo_hierarchical (time holdout)
 
 | status | check | value | threshold | detail |
@@ -124,11 +153,16 @@
 
 | status | check | value | threshold | detail |
 |---|---|---|---|---|
-| PASS | ROI stable across specs: Channel0 | 1.81 | [2.0, 5.0] | geo_hierarchical=0.95, pooled=1.21, prior_sensitivity=1.73 |
-| PASS | ROI stable across specs: Channel1 | 1.08 | [2.0, 5.0] | geo_hierarchical=0.64, pooled=0.67, prior_sensitivity=0.62 |
-| FAIL | ROI stable across specs: Channel2 | 5.25 | [2.0, 5.0] | geo_hierarchical=1.81, pooled=0.35, prior_sensitivity=0.51 |
-| WARN | ROI stable across specs: Channel3 | 4.78 | [2.0, 5.0] | geo_hierarchical=1.00, pooled=0.22, prior_sensitivity=0.21 |
-| WARN | ROI stable across specs: Channel4 | 4.08 | [2.0, 5.0] | geo_hierarchical=0.75, pooled=0.18, prior_sensitivity=0.30 |
-| WARN | ROI ranking agrees: geo_hierarchical vs pooled | -0.1 | 0.6 |  |
-| WARN | ROI ranking agrees: geo_hierarchical vs prior_sensitivity | -0.3 | 0.6 |  |
-| PASS | ROI ranking agrees: pooled vs prior_sensitivity | 0.9 | 0.6 |  |
+| SKIP | pooled: comparator admissible | False | passes own blocking checks | excluded: fails its own blocking checks, so it cannot veto the primary |
+| PASS | prior_sensitivity: ROI agrees with primary: Channel0 | 1.81 | [2.0, 5.0] | geo_hierarchical=0.95, prior_sensitivity=1.73; primary ELPD +177 |
+| PASS | prior_sensitivity: ROI agrees with primary: Channel1 | 1.02 | [2.0, 5.0] | geo_hierarchical=0.64, prior_sensitivity=0.62; primary ELPD +177 |
+| WARN | prior_sensitivity: ROI agrees with primary: Channel2 | 3.57 | [2.0, 5.0] | geo_hierarchical=1.81, prior_sensitivity=0.51; primary ELPD +177 |
+| WARN | prior_sensitivity: ROI agrees with primary: Channel3 | 4.78 | [2.0, 5.0] | geo_hierarchical=1.00, prior_sensitivity=0.21; primary ELPD +177 |
+| WARN | prior_sensitivity: ROI agrees with primary: Channel4 | 2.53 | [2.0, 5.0] | geo_hierarchical=0.75, prior_sensitivity=0.30; primary ELPD +177 |
+| WARN | prior_sensitivity: ROI ranking agrees with primary | -0.3 | 0.6 |  |
+| PASS | hierarchical_prior_sensitivity: ROI agrees with primary: Channel0 | 1.24 | [2.0, 5.0] | geo_hierarchical=0.95, hierarchical_prior_sensitivity=1.18; primary ELPD +1 |
+| PASS | hierarchical_prior_sensitivity: ROI agrees with primary: Channel1 | 1.12 | [2.0, 5.0] | geo_hierarchical=0.64, hierarchical_prior_sensitivity=0.72; primary ELPD +1 |
+| PASS | hierarchical_prior_sensitivity: ROI agrees with primary: Channel2 | 1.0 | [2.0, 5.0] | geo_hierarchical=1.81, hierarchical_prior_sensitivity=1.82; primary ELPD +1 |
+| PASS | hierarchical_prior_sensitivity: ROI agrees with primary: Channel3 | 1.01 | [2.0, 5.0] | geo_hierarchical=1.00, hierarchical_prior_sensitivity=1.01; primary ELPD +1 |
+| PASS | hierarchical_prior_sensitivity: ROI agrees with primary: Channel4 | 1.01 | [2.0, 5.0] | geo_hierarchical=0.75, hierarchical_prior_sensitivity=0.75; primary ELPD +1 |
+| PASS | hierarchical_prior_sensitivity: ROI ranking agrees with primary | 0.9 | 0.6 |  |
