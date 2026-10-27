@@ -9,22 +9,30 @@ revenue with the channel switched off, including adstock carryover, divided by s
 Machine-readable: [`outputs/channel_results.csv`](../outputs/channel_results.csv) (one row per channel; column
 definitions in [`outputs/channel_results_metadata.json`](../outputs/channel_results_metadata.json)).
 
-| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Incremental revenue (94% HDI) | Share of revenue | Cost per incremental conversion | ROI range across CV folds | Gate |
-|---|---|---|---|---|---|---|---|---|---|
-| Channel0 | 18.5% | 0.79 (0.25–1.37) | 0.25 | 0.66 | 32.00M (9.98M–55.52M) | 2.5% | 0.025 | 0.51–0.82 | WARN |
-| Channel1 | 14.3% | 0.69 (0.25–1.21) | 0.14 | 0.62 | 21.60M (7.96M–37.94M) | 1.7% | 0.029 | 0.61–0.72 | WARN |
-| Channel2 | 5.5% | 2.12 (1.42–2.85) | 1.00 | 1.59 | 25.62M (17.16M–34.39M) | 2.0% | 0.009 | 1.82–2.37 | PASS |
-| Channel3 | 40.0% | 1.67 (1.06–2.32) | 0.99 | 1.37 | 146.60M (92.83M–204.27M) | 11.3% | 0.012 | 1.65–1.74 | PASS |
-| Channel4 | 21.7% | 1.10 (0.79–1.38) | 0.71 | 1.00 | 52.56M (37.72M–65.97M) | 4.0% | 0.018 | 1.08–1.22 | WARN |
+| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Incremental revenue (94% HDI) | Share of revenue | ROI range across CV folds | Gate |
+|---|---|---|---|---|---|---|---|---|
+| Channel0 | 18.5% | 0.79 (0.25–1.37) | 0.25 | 0.66 | 32.00M (9.98M–55.52M) | 2.5% | 0.51–0.82 | WARN |
+| Channel1 | 14.3% | 0.69 (0.25–1.21) | 0.14 | 0.62 | 21.60M (7.96M–37.94M) | 1.7% | 0.61–0.72 | WARN |
+| Channel2 | 5.5% | 2.12 (1.42–2.85) | 1.00 | 1.59 | 25.62M (17.16M–34.39M) | 2.0% | 1.82–2.37 | PASS |
+| Channel3 | 40.0% | 1.67 (1.06–2.32) | 0.99 | 1.37 | 146.60M (92.83M–204.27M) | 11.3% | 1.65–1.74 | PASS |
+| Channel4 | 21.7% | 1.10 (0.79–1.38) | 0.71 | 1.00 | 52.56M (37.72M–65.97M) | 4.0% | 1.08–1.22 | WARN |
 
 ![ROI](figures/meas_roi.png)
+
+![Spend vs contribution](figures/meas_spend_vs_contribution.png)
 
 Paid media drives 21.3% of revenue (posterior median). Marginal ROI below average ROI
 means diminishing returns: the next dollar earns less than the average dollar so far.
 
 ## 2. Where revenue comes from
 
-![Decomposition](figures/meas_decomposition.png)
+![Model fit with baseline](figures/meas_fit_baseline.png)
+
+![Contribution waterfall](figures/meas_waterfall.png)
+
+Baseline is revenue the model attributes to non-media drivers (geo intercepts); controls are competitor sales,
+sentiment, promo, organic impressions and trend. Baseline and media trade off in the posterior (correlation
+about −0.9; see diagnostics), so channel rankings are firmer than the absolute split.
 
 ![Contribution over time](figures/meas_contribution_over_time.png)
 
@@ -32,7 +40,18 @@ means diminishing returns: the next dollar earns less than the average dollar so
 
 ![Response curves](figures/meas_response_curves.png)
 
-Each curve shows incremental revenue over the last 52 weeks if that channel's spend were scaled up or down,
+![Saturation](figures/meas_saturation.png)
+
+Saturation curves (top row, normalized to each channel's maximum effect) show how quickly returns diminish; the
+histograms below show where the data actually sits. Where there is little data, the curve follows the prior
+(grey band), so spend levels beyond the observed range are an extrapolation.
+
+How much the data narrowed each curve's shape (posterior ÷ prior 94% width of the saturation rate λ; 1.0 = learned
+nothing): Channel0 1.03, Channel1 0.82, Channel2 0.86, Channel3 0.64, Channel4 0.49. Channels near 1.0 have curve
+shapes set mostly by the prior, so their marginal ROI and the reallocation scenario rest more on assumptions than on
+data for those channels.
+
+Each response curve shows incremental revenue over the last 52 weeks if that channel's spend were scaled up or down,
 keeping its geo split and weekly timing. The flatter the curve at the current point, the less the next dollar
 earns. Bands widen away from current spend because the data rarely observed those levels.
 

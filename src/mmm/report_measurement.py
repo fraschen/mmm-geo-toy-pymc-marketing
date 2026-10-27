@@ -101,18 +101,125 @@ def hdi(x, prob=0.94):
 
 
 def decomposition(mmm):
+    """Posterior contributions (every 4th draw): channels (date, channel), controls (date, control), baseline per week."""
     groups = {g: mmm.idata[g].to_dataset() for g in mmm.idata.children}
     post = groups["posterior"].isel(draw=slice(None, None, 4))
     names = ["channel_contribution_original_scale", "control_contribution_original_scale",
              "intercept_contribution_original_scale"]
     det = pm.compute_deterministics(post, var_names=names, model=mmm.model, progressbar=False)
-    n_weeks = mmm.xarray_dataset.sizes["date"]
     geo = mmm.dims[0]
-    ch = det[names[0]].sum(geo)  # chain, draw, date, channel
-    ctrl = det[names[1]].sum((geo, "date"))  # chain, draw, control
-    base = det[names[2]]
-    base_total = (base.sum(geo) * n_weeks) if "date" not in base.dims else base.sum((geo, "date"))
-    return ch, ctrl, base_total
+    ch = det[names[0]].sum(geo)                      # chain, draw, date, channel
+    ctrl = det[names[1]].sum(geo)                    # chain, draw, date, control
+    intercept = det[names[2]].sum(geo)               # chain, draw (constant per week) or chain, draw, date
+    if "date" not in intercept.dims:
+        intercept = intercept.expand_dims(date=ch.date)
+    return ch, ctrl, intercept
+
+
+def fig_fit_with_baseline(ch, ctrl, intercept, md, path):
+    baseline = intercept + ctrl.sum("control")
+    expected = baseline + ch.sum("channel")
+    obs = md.df.groupby(md.date_column)[md.target_column].sum()
+    d = pd.to_datetime(expected.date.values)
+    fig, ax = plt.subplots(figsize=(10, 3.4))
+    for da, col, lab in ((expected, BAND, "expected (model)"), (baseline, SERIES[3], "baseline (no media)")):
+        lo, med, hi = (da.quantile(q, ("chain", "draw")) / 1e6 for q in (0.03, 0.5, 0.97))
+        ax.fill_between(d, lo, hi, color=col, alpha=0.18, lw=0)
+        ax.plot(d, med, color=col, lw=1.4, label=lab)
+    ax.plot(d, obs.values / 1e6, color=INK, lw=1, label="actual")
+    ax.set_ylabel("Revenue (M)", fontsize=8)
+    ax.set_ylim(0, None)
+    ax.legend(frameon=False, fontsize=8, ncol=3, loc="lower left")
+    title(ax, "Model fit: national weekly revenue, with the baseline the model attributes to non-media drivers",
+          "medians and 94% bands; the gap between expected and baseline is media's contribution")
+    style(ax)
+    save(fig, path)
+
+
+def fig_waterfall(ch, ctrl, intercept, chans, total_rev, path):
+    parts = {"Baseline": intercept.sum("date"), "Controls (net)": ctrl.sum(("date", "control"))}
+    parts.update({c: ch.sel(channel=c).sum("date") for c in chans})
+    med = {k: float(v.median()) for k, v in parts.items()}
+    lo_hi = {k: hdi(v.values) for k, v in parts.items()}
+    labels = list(med) + ["Total (model)"]
+    fig, ax = plt.subplots(figsize=(10, 3.8))
+    cum = 0.0
+    colors = [MUTED, MUTED] + SERIES[: len(chans)]
+    for i, (k, v) in enumerate(med.items()):
+        ax.bar(i, v / 1e6, bottom=cum / 1e6, color=colors[i], width=0.62)
+        ax.errorbar(i, (cum + v) / 1e6, yerr=[[(v - lo_hi[k][0]) / 1e6], [(lo_hi[k][1] - v) / 1e6]], fmt="none",
+                    ecolor=INK, lw=0.8, capsize=2)
+        top = cum + max(v, lo_hi[k][1])
+        ax.text(i, top / 1e6 + total_rev * 0.012 / 1e6, f"{v / 1e6:,.0f}M\n{v / total_rev:.1%}",
+                ha="center", va="bottom", fontsize=7.5, color=INK)
+        cum += v
+    ax.bar(len(med), cum / 1e6, color=INK, width=0.62)
+    ax.text(len(med), cum / 1e6 + total_rev * 0.012 / 1e6, f"{cum / 1e6:,.0f}M", ha="center", va="bottom", fontsize=7.5, color=INK)
+    ax.set_xticks(range(len(labels)), labels, fontsize=8)
+    ax.set_ylabel("Revenue over the period (M)", fontsize=8)
+    ax.set_ylim(0, cum / 1e6 * 1.12)
+    title(ax, "Contribution waterfall: how the model builds total revenue", "medians with 94% HDI per component; labels show revenue and share of actual revenue")
+    style(ax)
+    save(fig, path)
+    return med
+
+
+def fig_spend_vs_contribution(ch, chans, spend_tot, roi, path):
+    tot = ch.sum("date")
+    share_c = (tot / tot.sum("channel")).median(("chain", "draw")).to_series().loc[chans]
+    share_s = spend_tot / spend_tot.sum()
+    fig, ax = plt.subplots(figsize=(9, 3.6))
+    x = np.arange(len(chans))
+    ax.bar(x - 0.19, share_s.values, width=0.36, color=MUTED, label="share of media spend")
+    ax.bar(x + 0.19, share_c.values, width=0.36, color=SERIES[0], label="share of media contribution")
+    for i, c in enumerate(chans):
+        ax.text(i, max(share_s.iloc[i], share_c.iloc[i]) + 0.012, f"ROI {roi[c]:.2f}", ha="center", fontsize=8, color=INK)
+    ax.set_xticks(x, chans)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
+    ax.set_ylim(0, max(share_s.max(), share_c.max()) * 1.2)
+    ax.legend(frameon=False, fontsize=8, loc="upper left")
+    title(ax, "Spend share vs contribution share", "contribution share above spend share = the channel earns more than its budget weight")
+    style(ax)
+    save(fig, path)
+    return share_s, share_c
+
+
+def fig_saturation(mmm, md, spec, chans, path):
+    post = mmm.idata.posterior.to_dataset()
+    lam = post["saturation_lam"]
+    pop = md.df[md.geo_column].map(md.population)
+    x = np.linspace(0, 1.0, 101)
+    logistic = lambda v, l: (1 - np.exp(-l * v)) / (1 + np.exp(-l * v))  # noqa: E731
+    pri = spec["saturation_lam"]
+    rng = np.random.default_rng(0)
+    lam_prior = rng.gamma(pri["alpha"], 1 / pri["beta"], size=2000)
+    fig, axes = plt.subplots(2, len(chans), figsize=(14, 4.2), sharex=True, gridspec_kw={"height_ratios": [2.4, 1]})
+    for i, c in enumerate(chans):
+        lv = lam.sel(channel=c).values.ravel()
+        curves = logistic(x[None, :], lv[:, None])
+        pc = logistic(x[None, :], lam_prior[:, None])
+        ax = axes[0, i]
+        ax.fill_between(x, *np.quantile(pc, [0.03, 0.97], axis=0), color=MUTED, alpha=0.15, lw=0, label="prior 94%")
+        ax.fill_between(x, *np.quantile(curves, [0.03, 0.97], axis=0), color=SERIES[i], alpha=0.25, lw=0, label="posterior 94%")
+        ax.plot(x, np.median(curves, axis=0), color=SERIES[i], lw=1.6)
+        ax.set_ylim(0, 1.02)
+        ax.set_title(c, fontsize=9, color=INK, loc="left")
+        style(ax, "both")
+        scaled = (md.df[c] / pop) / (md.df[c] / pop).max()
+        ax2 = axes[1, i]
+        ax2.hist(scaled[scaled > 0], bins=30, range=(0, 1), color=SERIES[i], alpha=0.7)
+        ax2.text(0.98, 0.9, f"{(scaled == 0).mean():.0%} of weeks at 0", transform=ax2.transAxes, ha="right", va="top",
+                 fontsize=7, color=MUTED)
+        ax2.set_xlabel("Spend per capita, ÷ channel max", fontsize=7.5)
+        style(ax2)
+    axes[0, 0].set_ylabel("Share of max effect", fontsize=8)
+    axes[1, 0].set_ylabel("Geo-weeks", fontsize=8)
+    axes[0, 0].legend(frameon=False, fontsize=7, loc="lower right")
+    fig.suptitle("Saturation curves (top) and where the data sits on them (bottom): the curve is only learned where spend was observed",
+                 x=0.01, ha="left", fontsize=10.5, color=INK)
+    save(fig, path)
+    pw = np.subtract(*np.quantile(lam_prior, [0.97, 0.03]))
+    return {c: float(np.subtract(*np.quantile(lam.sel(channel=c).values.ravel(), [0.97, 0.03])) / pw) for c in chans}
 
 
 def main() -> None:
@@ -130,29 +237,20 @@ def main() -> None:
     total_rev_window = float(win[md.target_column].sum())
     total_rev = float(md.y.sum())
 
-    # ---------------- contribution decomposition (full period)
-    ch_t, ctrl_t, base_t = decomposition(mmm)
+    # ---------------- decomposition, fit with baseline, waterfall, spend vs contribution, saturation
+    ch_t, ctrl_t, int_t = decomposition(mmm)
+    fig_fit_with_baseline(ch_t, ctrl_t, int_t, md, FIG / "meas_fit_baseline.png")
+    wf = fig_waterfall(ch_t, ctrl_t, int_t, chans, total_rev, FIG / "meas_waterfall.png")
+    spend_full = md.df[chans].sum()
+    roi_med = res.set_index("channel").roi_median
+    fig_spend_vs_contribution(ch_t, chans, spend_full, roi_med, FIG / "meas_spend_vs_contribution.png")
+    for old in (FIG / "meas_cpik.png",):
+        old.unlink(missing_ok=True)
+    lam_ratio = fig_saturation(mmm, md, cfg["specs"][spec], chans, FIG / "meas_saturation.png")
     ch_tot = ch_t.sum("date")
-    parts = {"Baseline (geo intercepts)": base_t.values.ravel()}
-    for k in ctrl_t.control.values:
-        parts[f"Control: {k}"] = ctrl_t.sel(control=k).values.ravel()
-    for c in chans:
-        parts[c] = ch_tot.sel(channel=c).values.ravel()
-    dec = pd.DataFrame({k: {"median": np.median(v) / total_rev, "low": hdi(v)[0] / total_rev, "high": hdi(v)[1] / total_rev}
-                        for k, v in parts.items()}).T
-    fig, ax = plt.subplots(figsize=(8, 3.8))
-    y = np.arange(len(dec))
-    cols = [MUTED] + [MUTED] * len(ctrl_t.control) + SERIES[: len(chans)]
-    ax.barh(y, dec["median"], color=cols, height=0.6)
-    ax.errorbar(dec["median"], y, xerr=[dec["median"] - dec["low"], dec["high"] - dec["median"]], fmt="none",
-                ecolor=INK, lw=1, capsize=2)
-    ax.axvline(0, color=MUTED, lw=0.8)
-    ax.set_yticks(y, dec.index, fontsize=8)
-    ax.invert_yaxis()
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
-    title(ax, "What drives revenue: share of total revenue by component", "median and 94% HDI, full period")
-    style(ax, "x")
-    save(fig, FIG / "meas_decomposition.png")
+    old = FIG / "meas_decomposition.png"
+    if old.exists():
+        old.unlink()
 
     wk = ch_t.median(("chain", "draw"))
     fig, ax = plt.subplots(figsize=(10, 3.3))
@@ -262,7 +360,7 @@ def main() -> None:
     rows = "\n".join(
         f"| {c.channel} | {c.spend_share:.1%} | {c.roi_median:.2f} ({c.roi_hdi94_low:.2f}–{c.roi_hdi94_high:.2f}) | "
         f"{c.prob_roi_gt_1:.2f} | {c.mroi_median:.2f} | {fmt_m(c.contribution_median)} ({fmt_m(c.contribution_hdi94_low)}–"
-        f"{fmt_m(c.contribution_hdi94_high)}) | {c.contribution_share_of_revenue_mean:.1%} | {c.cost_per_incremental_conversion_median:.3f} | "
+        f"{fmt_m(c.contribution_hdi94_high)}) | {c.contribution_share_of_revenue_mean:.1%} | "
         f"{c.roi_median_min_across_cv_folds:.2f}–{c.roi_median_max_across_cv_folds:.2f} | {c.channel_gate_status} |"
         for c in res.itertuples())
     srows = "\n".join(
@@ -289,18 +387,26 @@ revenue with the channel switched off, including adstock carryover, divided by s
 Machine-readable: [`outputs/channel_results.csv`](../outputs/channel_results.csv) (one row per channel; column
 definitions in [`outputs/channel_results_metadata.json`](../outputs/channel_results_metadata.json)).
 
-| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Incremental revenue (94% HDI) | Share of revenue | Cost per incremental conversion | ROI range across CV folds | Gate |
-|---|---|---|---|---|---|---|---|---|---|
+| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Incremental revenue (94% HDI) | Share of revenue | ROI range across CV folds | Gate |
+|---|---|---|---|---|---|---|---|---|
 {rows}
 
 ![ROI](figures/meas_roi.png)
+
+![Spend vs contribution](figures/meas_spend_vs_contribution.png)
 
 Paid media drives {total_media / total_rev:.1%} of revenue (posterior median). Marginal ROI below average ROI
 means diminishing returns: the next dollar earns less than the average dollar so far.
 
 ## 2. Where revenue comes from
 
-![Decomposition](figures/meas_decomposition.png)
+![Model fit with baseline](figures/meas_fit_baseline.png)
+
+![Contribution waterfall](figures/meas_waterfall.png)
+
+Baseline is revenue the model attributes to non-media drivers (geo intercepts); controls are competitor sales,
+sentiment, promo, organic impressions and trend. Baseline and media trade off in the posterior (correlation
+about −0.9; see diagnostics), so channel rankings are firmer than the absolute split.
 
 ![Contribution over time](figures/meas_contribution_over_time.png)
 
@@ -308,7 +414,18 @@ means diminishing returns: the next dollar earns less than the average dollar so
 
 ![Response curves](figures/meas_response_curves.png)
 
-Each curve shows incremental revenue over the last 52 weeks if that channel's spend were scaled up or down,
+![Saturation](figures/meas_saturation.png)
+
+Saturation curves (top row, normalized to each channel's maximum effect) show how quickly returns diminish; the
+histograms below show where the data actually sits. Where there is little data, the curve follows the prior
+(grey band), so spend levels beyond the observed range are an extrapolation.
+
+How much the data narrowed each curve's shape (posterior ÷ prior 94% width of the saturation rate λ; 1.0 = learned
+nothing): """ + ", ".join(f"{c} {v:.2f}" for c, v in lam_ratio.items()) + f""". Channels near 1.0 have curve
+shapes set mostly by the prior, so their marginal ROI and the reallocation scenario rest more on assumptions than on
+data for those channels.
+
+Each response curve shows incremental revenue over the last 52 weeks if that channel's spend were scaled up or down,
 keeping its geo split and weekly timing. The flatter the curve at the current point, the less the next dollar
 earns. Bands widen away from current spend because the data rarely observed those levels.
 

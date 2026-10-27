@@ -102,7 +102,7 @@ def main() -> None:
             "roi_prior_contraction": "1 - posterior sd / prior sd; near 0 = result is mostly prior",
             "roi_median_{min,max}_across_cv_folds": "range of posterior-median ROI over rolling-origin CV fits (training windows ending at weeks 104, 117, 130, 143)",
             "channel_gate_status": "worst automated-gate status among the checks specific to this channel",
-            "cost_per_incremental_conversion_median": "spend / median incremental conversions",
+            "cost_per_incremental_conversion_median": "derived from revenue, not separately modeled: spend / (median incremental revenue / revenue_per_conversion) = revenue_per_conversion / ROI, because revenue per conversion is constant",
         },
     }
     (OUTPUTS / "channel_results_metadata.json").write_text(json.dumps(meta, indent=2, default=float))
