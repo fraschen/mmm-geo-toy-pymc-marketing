@@ -149,6 +149,19 @@ and were dropped without results ([`outputs/model_selection.md`](outputs/model_s
 
 ## Results
 
+**Diagnostics.** Clean convergence, calibrated geo-week intervals, and stable forecasts and ROI across four
+rolling-origin folds. Weak spots: national intervals are too narrow out-of-sample, and baseline and media trade off.
+Details: [`reports/diagnostics.md`](reports/diagnostics.md).
+
+**Measurement.** Media drives about 21% of revenue. Channel2 (ROI 2.12) and Channel3 (1.67) pay back clearly;
+Channel0 (0.79) and Channel1 (0.69) likely do not; Channel4 (1.10) is around break-even. Channel3 contributes the
+most revenue. Details: [`reports/measurement.md`](reports/measurement.md).
+
+**Budget recommendations** (budget-neutral, last 52 weeks): move spend from Channel0, Channel1 and Channel4 into
+Channel2 and Channel3. At ±20% per channel that gains **+3.6M** revenue (94% HDI +0.8M to +7.1M); at ±50%,
+**+7.2M** (−0.2M to +16.0M). Lift tests on Channel4 and Channel0 would firm up the picture.
+Details: [`reports/measurement.md`](reports/measurement.md), section 4.
+
 | Report | Contents |
 |---|---|
 | [`reports/diagnostics.md`](reports/diagnostics.md) | Model health: data and prior checks, convergence (R-hat, ESS, rank plots, energy), in-sample fit and residuals, holdout and rolling-origin CV, ROI identification, limitations |
