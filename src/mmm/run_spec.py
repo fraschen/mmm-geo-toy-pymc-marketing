@@ -111,10 +111,11 @@ def save_posterior(mmm, path) -> None:
     # posterior also holds per-date deterministics (mu, contributions: ~4 GB) and
     # predictive draws; all are regenerable from the parameters with the code.
     groups = {}
-    for g in ("posterior", "sample_stats", "prior"):
+    for g in ("posterior", "sample_stats", "prior", "constant_data", "fit_data"):
         if g in mmm.idata.children:
             ds = mmm.idata[g].to_dataset()
-            groups[g] = ds[[v for v in ds.data_vars if g == "sample_stats" or "date" not in ds[v].dims]]
+            keep_all = g in ("sample_stats", "constant_data", "fit_data")  # small; needed to rebuild analyses
+            groups[g] = ds[[v for v in ds.data_vars if keep_all or "date" not in ds[v].dims]]
     xr.DataTree.from_dict(groups).to_netcdf(path)
 
 

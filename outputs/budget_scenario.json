@@ -1,0 +1,65 @@
+{
+  "window": [
+    "2023-01-23",
+    "2024-01-15"
+  ],
+  "total_spend_window": 71438676.00472197,
+  "revenue_window": 443915419.9890631,
+  "posterior_draws": 1000,
+  "scenarios": {
+    "main (\u00b120% per channel)": {
+      "bounds": [
+        0.8,
+        1.2
+      ],
+      "multipliers": {
+        "Channel0": 0.8060331006077803,
+        "Channel1": 0.812572854097676,
+        "Channel2": 1.1724749266293368,
+        "Channel3": 1.1991166577594026,
+        "Channel4": 0.888713776243375
+      },
+      "uplift_median": 3608027.154252276,
+      "uplift_hdi94": [
+        780541.253516838,
+        7067871.846577734
+      ],
+      "prob_uplift_gt_0": 0.984,
+      "uplift_pct_of_window_revenue": 0.008127735581569049,
+      "channel_change_median": {
+        "Channel0": -1849961.180966476,
+        "Channel1": -1178887.7566466383,
+        "Channel2": 1066211.8248703778,
+        "Channel3": 7427377.301160004,
+        "Channel4": -1750957.5867798096
+      }
+    },
+    "stress (\u00b150% per channel)": {
+      "bounds": [
+        0.5,
+        1.5
+      ],
+      "multipliers": {
+        "Channel0": 0.5099783594301819,
+        "Channel1": 0.5098059261016141,
+        "Channel2": 1.4829297945621431,
+        "Channel3": 1.4952388667349243,
+        "Channel4": 0.7310582925881562
+      },
+      "uplift_median": 7177318.1076276,
+      "uplift_hdi94": [
+        -154376.43185333908,
+        16035105.796332136
+      ],
+      "prob_uplift_gt_0": 0.962,
+      "uplift_pct_of_window_revenue": 0.016168210844769552,
+      "channel_change_median": {
+        "Channel0": -4994627.297874991,
+        "Channel1": -3210630.8096632594,
+        "Channel2": 2730757.53861954,
+        "Channel3": 17172627.51151457,
+        "Channel4": -4299770.090945218
+      }
+    }
+  }
+}

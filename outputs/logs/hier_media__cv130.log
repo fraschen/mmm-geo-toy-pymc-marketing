@@ -1,0 +1,15 @@
+Sampling: [adstock_alpha, gamma_control, intercept_contribution, saturation_beta_raw_mu, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_lam, y, y_sigma]
+[hier_media__cv130] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_control, adstock_alpha, saturation_lam, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_beta_raw_mu, intercept_contribution]
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[hier_media__cv130] sampled in 10.1 min
+Sampling: [y]
+Sampling: [y]
+[hier_media__cv130] holdout {'holdout_weeks': 13, 'holdout_mape': 0.3246560931117609, 'holdout_r2': 0.7349768605521096, 'holdout_national_mape': 0.03529751316677875, 'holdout_interval_coverage': 0.9519230769230769}
+[hier_media__cv130] done in 14.3 min -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/hier_media__cv130
+ channel  roi_median  roi_hdi94_low  roi_hdi94_high  mroi_median  roi_prior_contraction
+Channel0        0.76           0.24            1.27         0.66                   0.94
+Channel1        0.69           0.22            1.34         0.62                   0.92
+Channel2        1.97           1.26            2.74         1.49                   0.65
+Channel3        1.74           1.22            2.30         1.48                   0.94
+Channel4        1.09           0.77            1.47         0.97                   0.96

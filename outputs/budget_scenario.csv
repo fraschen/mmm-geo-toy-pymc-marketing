@@ -1,0 +1,6 @@
+channel,current_spend,scenario_spend,spend_change_pct,current_incremental_revenue_median,scenario_incremental_revenue_median,incremental_revenue_change_median,marginal_roi_at_current_spend
+Channel0,1.39955e+07,1.12809e+07,-19.3967,1.10622e+07,9.13871e+06,-1.84996e+06,0.667709
+Channel1,9.91001e+06,8.05261e+06,-18.7427,6.83451e+06,5.61521e+06,-1.17889e+06,0.646815
+Channel2,4.14197e+06,4.85636e+06,17.2475,8.76304e+06,9.86351e+06,1.06621e+06,1.60627
+Channel3,2.79847e+07,3.35569e+07,19.9117,4.68101e+07,5.42687e+07,7.42738e+06,1.40691
+Channel4,1.54065e+07,1.36919e+07,-11.1286,1.69893e+07,1.52306e+07,-1.75096e+06,1.01392

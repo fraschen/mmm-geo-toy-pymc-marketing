@@ -1,0 +1,126 @@
+{
+  "run": "hier_media__cv104",
+  "spec": "hier_media",
+  "holdout": false,
+  "train_weeks": 104,
+  "spec_config": {
+    "description": "Media effects partially pooled across geos; control effects shared.",
+    "scaling": "population",
+    "yearly_seasonality": null,
+    "l_max": 4,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "hierarchical",
+    "control_pooling": "pooled"
+  },
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "data_checks": {
+    "missing_columns": [],
+    "n_rows": 6240,
+    "n_geos": 40,
+    "n_weeks": 156,
+    "balanced_panel": true,
+    "weekly_contiguous": true,
+    "n_missing_values": 0,
+    "negative_spend_cells": 0,
+    "negative_kpi_cells": 0,
+    "revenue_per_kpi_cv": 0.0049588969574893725,
+    "channel_zero_spend_share": {
+      "Channel0": 0.12099358974358974,
+      "Channel1": 0.2791666666666667,
+      "Channel2": 0.6426282051282052,
+      "Channel3": 0.027083333333333334,
+      "Channel4": 0.13141025641025642
+    },
+    "date_min": "2021-01-25",
+    "date_max": "2024-01-15"
+  },
+  "n_obs_fit": 4160,
+  "fit_minutes": 9.04,
+  "prior_predictive_coverage": 1.0,
+  "convergence": {
+    "rhat_max": 1.00513430631177,
+    "ess_bulk_min": 1297.0291666510745,
+    "ess_tail_min": 1472.24334995364,
+    "divergences": 0,
+    "divergence_rate": 0.0,
+    "bfmi_min": 0.8739871176080146,
+    "n_draws_total": 4000,
+    "rhat_by_var": {
+      "gamma_control": 1.001592849441167,
+      "saturation_beta_raw_offset": 1.0047623864765267,
+      "saturation_beta_raw_mu": 1.0028297234629746,
+      "intercept_contribution": 1.0031238047487996,
+      "y_sigma": 1.0049409315050482,
+      "adstock_alpha": 1.0035512616857123,
+      "saturation_lam": 1.001943115870491,
+      "saturation_beta_raw_sigma": 1.0011814717637715,
+      "y_original_scale": 1.0031246988095543,
+      "intercept_contribution_original_scale": 1.0031238047487996,
+      "control_contribution_original_scale": 1.001592849441167,
+      "channel_contribution_original_scale": 1.0043580115300594,
+      "total_media_contribution_original_scale": 1.0016498250908568,
+      "mu": 1.00513430631177,
+      "control_contribution": 1.001592849441167,
+      "channel_contribution": 1.0043580115300594,
+      "saturation_beta": 1.0041806659082326,
+      "saturation_beta_raw": 1.004176175646818
+    },
+    "ess_bulk_by_var": {
+      "gamma_control": 2614.638105877548,
+      "saturation_beta_raw_offset": 1687.0476814273775,
+      "saturation_beta_raw_mu": 2173.894078153203,
+      "intercept_contribution": 2152.346415218408,
+      "y_sigma": 4485.314702775627,
+      "adstock_alpha": 1595.5435583380822,
+      "saturation_lam": 2110.720034899888,
+      "saturation_beta_raw_sigma": 1927.581270698935,
+      "y_original_scale": 3101.325395318666,
+      "intercept_contribution_original_scale": 2152.346415218408,
+      "control_contribution_original_scale": 2614.638105877548,
+      "channel_contribution_original_scale": 1423.5933267251955,
+      "total_media_contribution_original_scale": 1297.0291666510745,
+      "mu": 1879.9792012012836,
+      "control_contribution": 2614.638105877548,
+      "channel_contribution": 1423.5933267251955,
+      "saturation_beta": 2028.3378433000253,
+      "saturation_beta_raw": 2028.3378433000253
+    }
+  },
+  "status": "converged",
+  "convergence_failures": [],
+  "fit": {
+    "r2": 0.7326044493688508,
+    "within_geo_r2": 0.15763496550743505,
+    "mape": 0.2934336379769382,
+    "ppc_interval_coverage": 0.95,
+    "residual_acf1_median_abs": 0.048439200375570736
+  },
+  "loo": {
+    "elpd_loo": 2693.5317628413077,
+    "elpd_loo_se": 45.046551228558144,
+    "pareto_k_bad_share": 0.0
+  },
+  "holdout_scores": {
+    "holdout_weeks": 13,
+    "holdout_mape": 0.3135708758932785,
+    "holdout_r2": 0.6792957689535568,
+    "holdout_national_mape": 0.06989856082259248,
+    "holdout_interval_coverage": 0.9384615384615385
+  }
+}

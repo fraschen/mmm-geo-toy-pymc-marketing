@@ -4,9 +4,9 @@ PY := PYTHONPATH=src $(KEEPAWAKE) .venv/bin/python -u -W ignore
 SPECS := pooled_media hier_media hier_media_controls
 PRIMARY := $(shell .venv/bin/python -c "import yaml;print(yaml.safe_load(open('config/pipeline.yaml'))['primary_spec'])")
 
-.PHONY: all setup data eda fit holdout cv fit-all select gates results clean
+.PHONY: all setup data eda fit holdout cv fit-all select gates results reports clean
 
-all: setup eda fit-all holdout cv gates results
+all: setup eda fit-all select holdout cv gates results reports
 
 setup: data
 	uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.lock
@@ -37,6 +37,10 @@ gates:          ## exits 1 if any blocking check fails
 
 results:
 	$(PY) -m mmm.results
+
+reports:        ## model health + measurement reports -> reports/ (after gates and results)
+	$(PY) -m mmm.report_diagnostics
+	$(PY) -m mmm.report_measurement
 
 clean:
 	rm -rf outputs/specs artifacts

@@ -65,5 +65,37 @@ validation stage should check whether that shows up in residuals, and the README
 **What could be done, and was not (protocol: no reruns):** geo-varying effects for competitor and sentiment only,
 with the other controls shared (README, "Next steps"). A with more draws.
 
-**Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds), then the gates. Awaiting
-approval.
+## 2. `hier_media` validation: holdout and rolling-origin CV
+
+Four folds, each training on weeks 1..N and forecasting the next 13 (N = 104, 117, 130, 143). Same sampler.
+
+| Fold | Status | R-hat max | ESS bulk min | Geo-week MAPE in → out | National weekly MAPE | Geo-week 94% coverage |
+|---|---|---|---|---|---|---|
+| 1–104 | converged | 1.0051 | 1297 | 0.293 → 0.314 | 7.0% | 94% |
+| 1–117 | converged | 1.0047 | 641 | 0.293 → 0.301 | 4.0% | 94% |
+| 1–130 | converged | 1.0065 | 929 | 0.292 → 0.325 | 3.5% | 95% |
+| 1–143 | converged | 1.0048 | 972 | 0.293 → 0.309 | 4.6% | 91% |
+
+| Median ROI | 1–104 | 1–117 | 1–130 | 1–143 | full | max ÷ min |
+|---|---|---|---|---|---|---|
+| Channel0 | 0.51 | 0.67 | 0.76 | 0.82 | 0.79 | 1.59 |
+| Channel1 | 0.61 | 0.72 | 0.69 | 0.70 | 0.69 | 1.18 |
+| Channel2 | 1.84 | 1.82 | 1.97 | 2.37 | 2.12 | 1.30 |
+| Channel3 | 1.67 | 1.65 | 1.74 | 1.65 | 1.67 | 1.05 |
+| Channel4 | 1.20 | 1.22 | 1.09 | 1.08 | 1.10 | 1.12 |
+
+**Gate verdict: PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail). Warnings: within-geo R² 0.156 (weak weekly
+signal); Channel0, Channel1 and Channel4 undetermined around break-even.
+
+**Findings from the reports (`reports/`):**
+- National 94% intervals cover 91% of weeks in-sample but 69–92% out-of-sample. Residuals are not correlated
+  across geos (+0.01); the shortfall comes from level errors in some forecast windows (bias +6.5% in the first
+  fold). National uncertainty is understated.
+- The prior predictive is far wider than the data (it allows negative revenue): priors are permissive.
+- Channel2's posterior ROI (1.42–2.85) extends past its prior's 94% range (0.02–2.59): the spend-share prior may be
+  shrinking small channels.
+- Baseline and total media correlate at −0.93 in the posterior.
+
+**Budget scenario (last 52 weeks, budget-neutral):** ±20% per channel moves spend from Channel0, Channel1 and
+Channel4 (0.81×, 0.81×, 0.89×) to Channel2 and Channel3 (1.17×, 1.20×): +3.6M revenue (94% HDI +0.8M to +7.1M,
+P(gain > 0) = 0.98). ±50%: +7.2M (−0.2M to +16.0M, P = 0.96), extrapolating beyond observed spend.

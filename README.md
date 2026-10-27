@@ -6,8 +6,38 @@ built with [PyMC-Marketing](https://github.com/pymc-labs/pymc-marketing) 1.3. It
 ROI with uncertainty. Automated pass/fail gates decide whether a fit is acceptable, so no one has to judge it by
 looking at plots.
 
-> **Status: candidate specifications proposed, not yet fitted.** Model selection, results and the client-readiness
-> verdict will be added after the candidates below are approved and run.
+## Verdict: is this good enough for a client?
+
+**Yes, as a caveated read of channel performance and for modest reallocations (±20%); not yet for large budget
+moves.** The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail; evidence in
+[`reports/diagnostics.md`](reports/diagnostics.md) and [`outputs/gate_report.md`](outputs/gate_report.md)).
+
+**Why it can be shown.** The selected model (`hier_media`):
+- converges cleanly (R-hat ≤ 1.006, ESS ≥ 532, no divergences);
+- has calibrated geo-week predictive intervals;
+- forecasts four held-out quarters without degrading (national weekly error 3.5–7.0%);
+- gives channel ROI that stays within 1.6× across those training windows;
+- learns ROI from the data: posteriors are far narrower than priors.
+
+**What a client can be told** ([`reports/measurement.md`](reports/measurement.md)):
+- **Channel2 and Channel3 pay back clearly:** ROI 2.12 and 1.67, P(ROI > 1) of 1.00 and 0.99.
+- **Channel1 and Channel0 likely do not** (ROI 0.69 and 0.79, P = 0.14 and 0.25). **Channel4 is around
+  break-even** (1.10, P = 0.71). The gates mark all three as undetermined.
+- **A budget-neutral shift of up to ±20% per channel**, from Channel0, Channel1 and Channel4 into Channel2 and
+  Channel3, gains an estimated **+3.6M revenue over 52 weeks** (94% HDI +0.8M to +7.1M; P(gain > 0) = 0.98),
+  about 0.8% of revenue.
+
+**Caveats that must go with the numbers:**
+- **Control effects are shared across geos,** although the competitor and sentiment effects vary by geo
+  (I² 0.94, 0.88) and correlate with spend; some of that can leak into media ROI.
+- **Baseline and media trade off** (posterior correlation −0.93): channel rankings are firmer than absolute
+  contributions.
+- **National forecast intervals are too narrow out-of-sample** (69–92% coverage for a 94% interval), because
+  baseline level shifts are not in the model.
+- **Large reallocations extrapolate** beyond observed spend: the ±50% scenario's interval reaches below zero.
+
+**What would make it fully client-ready:** lift tests on the large undetermined budgets (Channel4, 21.7% of
+spend; Channel0, 18.5%), calibrated into the model, and the next-step model fixes below.
 
 ## Reproduce
 
@@ -15,10 +45,12 @@ looking at plots.
 make setup     # fetch + checksum the data, create .venv from requirements.lock (needs uv)
 make eda       # exploratory analysis -> outputs/eda/ (summary JSON + figures)
 make fit-all   # fit the candidate specifications
+make select    # pick the specification by the protocol -> outputs/model_selection.md
 make holdout   # refit the selected spec without the last 13 weeks and score the forecast
 make cv        # rolling-origin CV folds for the selected spec (train to week 104/117/130, forecast 13)
 make gates     # automated acceptance checks; exits 1 if any blocking check fails
 make results   # outputs/channel_results.csv + metadata + ROI figure
+make reports   # reports/diagnostics.md (model health) and reports/measurement.md (channel results, scenario)
 ```
 
 Everything in `outputs/` is a deterministic function of `config/pipeline.yaml`, the checksummed data and
@@ -54,7 +86,7 @@ raw data; no model was used.
 
 ![National revenue and spend](outputs/eda/national_revenue_and_spend.png)
 
-## Candidate specifications (proposed, awaiting approval)
+## Candidate specifications
 
 ### Choices shared by all candidates, and the EDA evidence for them
 
@@ -88,6 +120,23 @@ raw data; no model was used.
    which case the simpler one wins.
 4. **Validate the selected spec:** 13-week holdout and three rolling-origin CV folds.
 5. **Gates decide** on the selected spec, its holdout and its CV folds.
+
+### Selection result
+
+Only `hier_media` (B) converged; `pooled_media` (A) and `hier_media_controls` (C) failed their convergence checks
+and were dropped without results ([`outputs/model_selection.md`](outputs/model_selection.md); details in
+[ITERATIONS.md](ITERATIONS.md)). B was therefore selected by convergence, not by an ELPD comparison.
+
+## Results
+
+| Report | Contents |
+|---|---|
+| [`reports/diagnostics.md`](reports/diagnostics.md) | Model health: data and prior checks, convergence (R-hat, ESS, rank plots, energy), in-sample fit and residuals, holdout and rolling-origin CV, ROI identification, limitations |
+| [`reports/measurement.md`](reports/measurement.md) | Channel ROI, marginal ROI and contribution with credible intervals; revenue decomposition; response curves; budget reallocation scenario |
+| [`outputs/channel_results.csv`](outputs/channel_results.csv) | One row per channel for downstream use; column definitions in `outputs/channel_results_metadata.json` |
+| [`outputs/budget_scenario.csv`](outputs/budget_scenario.csv) | Main reallocation scenario per channel; both scenarios in `budget_scenario.json` |
+
+![Channel ROI](reports/figures/meas_roi.png)
 
 ## Automated acceptance gates
 
@@ -133,25 +182,38 @@ From the EDA alone:
 
 ## Next steps
 
-- **Geo-varying effects for competitor sales and sentiment only.** The EDA shows these two control effects vary
-  by geo (I² 0.94 and 0.88), while promo, organic and trend do not. Both are confounders of spend, so sharing
-  them across geos can bias media ROI. pymc-marketing's `ControlMuEffect` can add them as a separate term with a
-  geo-varying (partially pooled) coefficient, leaving the other controls as one shared effect each. The model
-  input then has to be an `xr.Dataset` carrying those columns, for fitting and for out-of-sample prediction.
+1. **Lift tests** (geo holdouts) on Channel4 and Channel0, the largest budgets with undetermined payback,
+   calibrated into the model. This is also the only fix for the baseline–media trade-off.
+2. **Geo-varying effects for competitor sales and sentiment only.** The EDA shows these two control effects vary
+   by geo (I² 0.94 and 0.88), while promo, organic and trend do not. Both are confounders of spend, so sharing
+   them across geos can bias media ROI. pymc-marketing's `ControlMuEffect` can add them as a separate term with a
+   geo-varying (partially pooled) coefficient, leaving the other controls as one shared effect each. The model
+   input then has to be an `xr.Dataset` carrying those columns, for fitting and for out-of-sample prediction.
+3. **A time-varying baseline** (e.g. a Gaussian-process intercept) so national forecast intervals include level
+   shifts.
+4. **Prior calibration.** The prior predictive allows negative revenue and is far wider than the data. Tighter
+   intercept and noise priors would keep the model honest without changing the media priors. Channel2's posterior
+   ROI also extends past its spend-share prior, so that prior may be shrinking small channels.
+5. **Pre-declared sensitivity runs** for the saturation prior and the 30% media-share anchor, reported whatever
+   they show.
 
 ## Repository layout
 
 Model runs and the modeling decisions that follow are logged in [ITERATIONS.md](ITERATIONS.md).
 
 ```
-config/pipeline.yaml     data mapping, model specs, sampler, gate thresholds
-src/mmm/data.py          load, validate, shape the panel
-src/mmm/eda.py           exploratory analysis -> outputs/eda/
-src/mmm/model.py         build a PyMC-Marketing MMM from a spec
-src/mmm/run_spec.py      fit one spec; diagnostics, fit, holdout, ROI -> outputs/specs/<spec>/
-src/mmm/gates.py         automated acceptance -> outputs/gate_report.{json,md}
-src/mmm/results.py       client-facing channel results file + figure
-scripts/fetch_data.sh    download + checksum the dataset
-ITERATIONS.md            log of model runs, results and modeling decisions
+config/pipeline.yaml          data mapping, candidate specs, sampler, gate thresholds
+src/mmm/data.py               load, validate, shape the panel (incl. population)
+src/mmm/eda.py                exploratory analysis -> outputs/eda/
+src/mmm/model.py              build a PyMC-Marketing MMM from a spec (population scaling)
+src/mmm/run_spec.py           fit one spec; stop if not converged; fit, holdout, ROI -> outputs/specs/<run>/
+src/mmm/select.py             candidate selection by PSIS-LOO -> outputs/model_selection.md
+src/mmm/gates.py              automated acceptance -> outputs/gate_report.{json,md}
+src/mmm/results.py            channel results file
+src/mmm/fitted.py             rebuild a fitted model from its saved posterior
+src/mmm/report_diagnostics.py model health report -> reports/diagnostics.md
+src/mmm/report_measurement.py measurement report and budget scenario -> reports/measurement.md
+scripts/fetch_data.sh         download + checksum the dataset
+ITERATIONS.md                 log of model runs, results and modeling decisions
 ```
 
