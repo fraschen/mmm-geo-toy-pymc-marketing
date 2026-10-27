@@ -28,8 +28,8 @@ sampler:
   target_accept: 0.95
   random_seed: 20261027
 
-# Candidates designed from the EDA alone (README, ITERATIONS entry 0). The primary spec is chosen
-# by the selection protocol after fitting (src/mmm/select.py); until then it is unset.
+# Candidates designed from the EDA alone (see the README). The primary spec was chosen by the
+# selection protocol (src/mmm/select.py).
 primary_spec: hier_media
 specs:
   pooled_media:

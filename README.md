@@ -144,8 +144,8 @@ raw data; no model was used.
 ### Selection result
 
 Only `hier_media` (B) converged; `pooled_media` (A) and `hier_media_controls` (C) failed their convergence checks
-and were dropped without results ([`outputs/model_selection.md`](outputs/model_selection.md); details in
-[ITERATIONS.md](ITERATIONS.md)). B was therefore selected by convergence, not by an ELPD comparison.
+and were dropped without results ([`outputs/model_selection.md`](outputs/model_selection.md)). B was therefore
+selected by convergence, not by an ELPD comparison.
 
 ## Results
 
@@ -234,8 +234,6 @@ From the EDA alone:
 
 ## Repository layout
 
-Model runs and the modeling decisions that follow are logged in [ITERATIONS.md](ITERATIONS.md).
-
 ```
 config/pipeline.yaml          data mapping, candidate specs, sampler, gate thresholds
 src/mmm/data.py               load, validate, shape the panel (incl. population)
@@ -251,6 +249,5 @@ src/mmm/report_measurement.py measurement report, budget scenario, calibration -
 src/mmm/lift_test.py          the hypothetical lift test -> data/lift_tests/hypothetical_channel4.csv
 Dockerfile                    reproducible environment; `make docker` runs the full pipeline
 scripts/fetch_data.sh         download + checksum the dataset
-ITERATIONS.md                 log of model runs, results and modeling decisions
 ```
 
