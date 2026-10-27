@@ -131,7 +131,7 @@ From the EDA alone:
 - **Channel2 is often dark** (zero spend in 64% of geo-weeks).
 - **No ground truth in the CSV.** The data is simulated, but the true ROIs are not published alongside it.
 
-## Possible future enhancements
+## Next steps
 
 - **Geo-varying effects for competitor sales and sentiment only.** The EDA shows these two control effects vary
   by geo (I² 0.94 and 0.88), while promo, organic and trend do not. Both are confounders of spend, so sharing

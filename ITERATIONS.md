@@ -63,7 +63,7 @@ effects across geos even though the competitor and sentiment effects vary by geo
 validation stage should check whether that shows up in residuals, and the README must state it as a limitation.
 
 **What could be done, and was not (protocol: no reruns):** geo-varying effects for competitor and sentiment only,
-with the other controls shared (README, "Possible future enhancements"). A with more draws.
+with the other controls shared (README, "Next steps"). A with more draws.
 
 **Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds), then the gates. Awaiting
 approval.
