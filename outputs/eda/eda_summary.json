@@ -13,7 +13,9 @@
     "national_acf_lag52": 0.0565966732018083,
     "share_of_detrended_national_variance_explained_by_week_of_year": 0.36031184639956626,
     "within_geo_cv_median": 0.3003691334827361,
-    "within_geo_acf_lag1_median": 0.021919314610588485
+    "within_geo_acf_lag1_median": 0.021919314610588485,
+    "national_trend_hac_t": 2.5922085479863983,
+    "national_trend_hac_p": 0.009536194431268265
   },
   "spend": {
     "share": {
@@ -286,6 +288,48 @@
       "Promo": 0.32834256620934094,
       "Organic_channel0_impression": 0.41051956157643527,
       "trend": 0.06832652914206697
+    }
+  },
+  "control_effect_heterogeneity": {
+    "competitor_sales_control": {
+      "pooled_effect": -0.077977586686719,
+      "Q": 603.687189439396,
+      "df": 39,
+      "p": 2.3521610279750378e-102,
+      "I2": 0.9353970057966333,
+      "n_geos_significant": 30
+    },
+    "sentiment_score_control": {
+      "pooled_effect": -0.021082748276964138,
+      "Q": 317.4132242784956,
+      "df": 39,
+      "p": 2.4898058120674704e-45,
+      "I2": 0.8771317732944178,
+      "n_geos_significant": 17
+    },
+    "Promo": {
+      "pooled_effect": 0.24563533221837777,
+      "Q": 51.478723819168444,
+      "df": 39,
+      "p": 0.08706217662068318,
+      "I2": 0.24240546177879235,
+      "n_geos_significant": 15
+    },
+    "Organic_channel0_impression": {
+      "pooled_effect": 0.045028241537573455,
+      "Q": 48.85405730129362,
+      "df": 39,
+      "p": 0.13399712231537597,
+      "I2": 0.2017039698570275,
+      "n_geos_significant": 5
+    },
+    "trend": {
+      "pooled_effect": 0.04027970440458997,
+      "Q": 49.28561738329253,
+      "df": 39,
+      "p": 0.12514981471379635,
+      "I2": 0.20869409635881486,
+      "n_geos_significant": 7
     }
   }
 }

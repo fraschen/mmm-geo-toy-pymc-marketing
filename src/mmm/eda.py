@@ -1,4 +1,4 @@
-"""Exploratory data analysis, following the pymc-labs `mmm-modeling` skill's EDA checklist.
+"""Exploratory data analysis.
 
     python -m mmm.eda   ->  outputs/eda/eda_summary.json + figures
 
@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from statsmodels.stats.outliers_influence import variance_inflation_factor  # noqa: E402
+import statsmodels.api as sm  # noqa: E402
+from scipy.stats import chi2  # noqa: E402
 
 from . import data  # noqa: E402
 from .config import OUTPUTS, ROOT, load_config  # noqa: E402
@@ -50,7 +52,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     S: dict = {}
 
-    # 1. data sufficiency (skill: weekly >= ~100, recommended 150+ per geo)
+    # 1. data sufficiency
     S["data"] = {"n_geos": checks["n_geos"], "n_weeks_per_geo": checks["n_weeks"],
                  "meets_recommended_150_weeks": checks["n_weeks"] >= 150,
                  "balanced_panel": checks["balanced_panel"], "missing_values": checks["n_missing_values"]}
@@ -140,6 +142,31 @@ def main() -> None:
         "max_abs_corr_with_channels_within_geo": {
             c: float(_demean(df, [c, *ch], geo).corr().loc[c, ch].abs().max()) for c in ctrl},
     }
+
+    # 9. trend significance (HAC standard errors, national weekly revenue)
+    r = sm.OLS(nat[y].to_numpy(), sm.add_constant(t)).fit(cov_type="HAC", cov_kwds={"maxlags": 4})
+    S["target"]["national_trend_hac_t"] = float(r.tvalues[1])
+    S["target"]["national_trend_hac_p"] = float(r.pvalues[1])
+
+    # 10. do control effects differ by geo? Per-geo OLS of relative revenue on controls + relative spend,
+    #     then Cochran's Q / I^2 across geos for each control coefficient.
+    est = {c: [] for c in ctrl}
+    for _, d in df.groupby(geo):
+        X = d[ctrl + ch].copy()
+        X[ch] = X[ch] / X[ch].mean().replace(0, 1)
+        fit = sm.OLS(d[y] / d[y].mean(), sm.add_constant(X)).fit(cov_type="HAC", cov_kwds={"maxlags": 2})
+        for c in ctrl:
+            est[c].append((fit.params[c], fit.bse[c]))
+    het = {}
+    for c in ctrl:
+        b_, se_ = np.array(est[c]).T
+        w = 1 / se_**2
+        bbar = float((w * b_).sum() / w.sum())
+        q = float((w * (b_ - bbar) ** 2).sum())
+        k = len(b_) - 1
+        het[c] = {"pooled_effect": bbar, "Q": q, "df": k, "p": float(chi2.sf(q, k)),
+                  "I2": max(0.0, (q - k) / q), "n_geos_significant": int((np.abs(b_ / se_) > 1.96).sum())}
+    S["control_effect_heterogeneity"] = het
 
     (OUT / "eda_summary.json").write_text(json.dumps(S, indent=2))
 
