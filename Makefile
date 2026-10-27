@@ -1,7 +1,7 @@
 # On macOS, keep the machine from sleeping while a fit runs (no-op elsewhere)
 KEEPAWAKE := $(shell command -v caffeinate >/dev/null 2>&1 && echo caffeinate -i -s)
 PY := PYTHONPATH=src $(KEEPAWAKE) .venv/bin/python -u -W ignore
-SPECS := pooled_media hier_media hier_media_controls
+SPECS := pooled_media hier_media hier_media_controls hier_media_hetero_controls
 PRIMARY := $(shell .venv/bin/python -c "import yaml;print(yaml.safe_load(open('config/pipeline.yaml'))['primary_spec'])")
 
 .PHONY: all setup data eda fit holdout cv fit-all select gates results clean

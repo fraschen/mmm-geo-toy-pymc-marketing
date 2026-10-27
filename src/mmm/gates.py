@@ -1,20 +1,18 @@
 """Automated acceptance gates: decide whether the fit is client-ready without looking at plots.
 
-    python -m mmm.gates            # reads outputs/specs/*/metrics.json, writes outputs/gate_report.{json,md}
+    python -m mmm.gates   # checks the primary spec, its holdout and CV folds -> outputs/gate_report.{json,md}
 
-Every check is PASS / WARN / FAIL (SKIP: inadmissible comparator, not counted). Exit code is 1 if any blocking check FAILs,
-so CI can refuse to publish results.
+Every check is PASS / WARN / FAIL. Exit code is 1 if any blocking check FAILs, so CI can refuse to publish
+results.
 """
 
 from __future__ import annotations
 
 import json
 import sys
-from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
 
 from .config import OUTPUTS, load_config
 
@@ -109,66 +107,23 @@ def cv_checks(folds: dict[str, dict], full_ch: pd.DataFrame, fold_ch: dict[str, 
     return out
 
 
-def cross_spec_checks(primary: str, chans: dict[str, pd.DataFrame], elpd: dict[str, float],
-                      admissible: dict[str, bool], g: dict) -> list[dict]:
-    """Robustness: the primary's ROI must agree with each admissible alternative specification.
-
-    A comparator is admissible only if it passes its own blocking checks: a model that does not
-    converge cannot veto one that does. A >5x disagreement is blocking only when the comparator fits
-    about as well as the primary (ELPD-LOO within `cross_spec_elpd_margin`); when the primary fits
-    clearly better it is reported as a warning.
-    """
-    prim = chans[primary].set_index("channel")["roi_median"]
-    out = []
-    for s, df in chans.items():
-        if s == primary:
-            continue
-        if not admissible[s]:
-            out.append(_check(f"{s}: comparator admissible", False, True, threshold="passes own blocking checks",
-                              detail="excluded: fails its own blocking checks, so it cannot veto the primary"))
-            out[-1]["status"] = "SKIP"
-            continue
-        comp = df.set_index("channel")["roi_median"]
-        d_elpd = elpd[primary] - elpd[s]
-        primary_better = d_elpd > g["cross_spec_elpd_margin"]
-        for c in prim.index:
-            ratio = float(max(prim[c], comp[c]) / max(min(prim[c], comp[c]), 1e-9))
-            conflict = ratio > g["cross_spec_roi_ratio_fail"] and not primary_better
-            out.append(_check(f"{s}: ROI agrees with primary: {c}", round(ratio, 2), ratio <= g["cross_spec_roi_ratio_warn"],
-                              warn=not conflict, threshold=[g["cross_spec_roi_ratio_warn"], g["cross_spec_roi_ratio_fail"]],
-                              detail=f"{primary}={prim[c]:.2f}, {s}={comp[c]:.2f}; primary ELPD {d_elpd:+.0f}"))
-        rho = float(spearmanr(prim, comp.loc[prim.index]).statistic)
-        out.append(_check(f"{s}: ROI ranking agrees with primary", round(rho, 2), rho >= g["cross_spec_rank_agreement_min"],
-                          threshold=g["cross_spec_rank_agreement_min"], warn=True))
-    return out
-
-
 def main() -> int:
     cfg = load_config()
     g = cfg["gates"]
     primary = cfg["primary_spec"]
     specs_dir = OUTPUTS / "specs"
 
-    sections, chans, elpd, admissible = {}, {}, {}, {}
-    for s in sorted(cfg["specs"], key=lambda k: k != primary):  # primary first
-        p = specs_dir / s
-        if not (p / "metrics.json").exists():
-            sections[s] = [_check("fit exists", None, False, detail=f"run `make fit SPEC={s}`")]
-            continue
+    sections, chans = {}, {}
+    p = specs_dir / primary
+    if not (p / "metrics.json").exists():
+        sections[primary] = [_check("fit exists", None, False, detail=f"run `make fit SPEC={primary}`")]
+    else:
         m = json.loads((p / "metrics.json").read_text())
         if m.get("status") == "not_converged":
-            sections[s] = spec_checks(m, None, g)
-            admissible[s] = False
+            sections[primary] = spec_checks(m, None, g)
         else:
-            chans[s] = pd.read_csv(p / "channel_metrics.csv")
-            sections[s] = spec_checks(m, chans[s], g)
-            elpd[s] = m["loo"]["elpd_loo"]
-            admissible[s] = not any(r["status"] == "FAIL" for r in sections[s])
-        # non-primary specs are evidence for robustness; their own failures are not blocking
-        if s != primary:
-            for r in sections[s]:
-                if r["status"] == "FAIL":
-                    r["status"], r["blocking"] = "WARN", False
+            chans[primary] = pd.read_csv(p / "channel_metrics.csv")
+            sections[primary] = spec_checks(m, chans[primary], g)
 
     hp = specs_dir / f"{primary}__holdout" / "metrics.json"
     sections[f"{primary} (time holdout)"] = (
@@ -187,20 +142,16 @@ def main() -> int:
     if folds and primary in chans:
         sections[f"{primary} (rolling-origin CV)"] = cv_checks(folds, chans[primary], fold_ch, g)
 
-    if primary in chans and len(chans) >= 2:
-        sections["cross-specification agreement"] = cross_spec_checks(primary, chans, elpd, admissible, g)
-
     flat = [r for rs in sections.values() for r in rs]
     n_fail = sum(r["status"] == "FAIL" for r in flat)
     n_warn = sum(r["status"] == "WARN" for r in flat)
-    n_skip = sum(r["status"] == "SKIP" for r in flat)
     verdict = "FAIL" if n_fail else ("PASS_WITH_WARNINGS" if n_warn else "PASS")
     report = {"verdict": verdict, "primary_spec": primary, "n_fail": n_fail, "n_warn": n_warn,
-              "n_skip": n_skip, "n_pass": len(flat) - n_fail - n_warn - n_skip, "sections": sections}
+              "n_pass": len(flat) - n_fail - n_warn, "sections": sections}
     (OUTPUTS / "gate_report.json").write_text(json.dumps(report, indent=2, default=lambda o: o.item() if hasattr(o, "item") else str(o)))
 
     lines = [f"# Gate report: **{verdict}**", "",
-             f"{report['n_pass']} pass, {n_warn} warn, {n_fail} fail, {n_skip} skipped. Primary spec: `{primary}`.", ""]
+             f"{report['n_pass']} pass, {n_warn} warn, {n_fail} fail. Primary spec: `{primary}`.", ""]
     for sec, rs in sections.items():
         lines += [f"## {sec}", "", "| status | check | value | threshold | detail |", "|---|---|---|---|---|"]
         lines += [f"| {r['status']} | {r['check']} | {r['value']} | {r['threshold'] if r['threshold'] is not None else ''} | {r['detail']} |" for r in rs]

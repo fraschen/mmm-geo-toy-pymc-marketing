@@ -86,6 +86,19 @@ def build(md: ModelData, spec: dict) -> MMM:
             dims=(geo, "control"),
             centered=False,
         )
+    elif spec["control_pooling"] == "selective":
+        # Only the controls listed in `heterogeneous_controls` vary by geo: they get the same spread prior
+        # as "hierarchical"; the others get a spread prior 100x tighter, which keeps them effectively
+        # shared. Centered, because the geo-varying effects are strongly identified (40 geos x 156 weeks).
+        het = set(spec["heterogeneous_controls"])
+        tau = np.array([0.25 * y_bar if c in het else 0.0025 * y_bar for c in md.control_columns])
+        gamma_control = Prior(
+            "Normal",
+            mu=Prior("Normal", mu=0, sigma=y_bar, dims="control"),
+            sigma=Prior("HalfNormal", sigma=tau, dims="control"),
+            dims=(geo, "control"),
+            centered=spec.get("control_centered", True),
+        )
     else:
         raise ValueError(spec["control_pooling"])
 

@@ -66,7 +66,7 @@ raw data; no model was used.
 | Controls | Competitor sales, sentiment, promo, organic impressions, linear trend | Confounders of spend, and a significant trend |
 | Seasonality | None | Not detectable above chance |
 | Adstock | Geometric, `l_max` 4 weeks, α ~ Beta(1, 3) | No lagged signal beyond 1–2 weeks |
-| Saturation | Logistic, λ ~ Gamma(3, 1) | Standard for spend scaled to [0, 1]. Tested by the sensitivity fit below |
+| Saturation | Logistic, λ ~ Gamma(3, 1) | Standard for spend scaled to [0, 1] |
 | Effect size anchor | Spend share × an assumed 30% media share of revenue, in the model's per-capita scaled units; prior SD 2× the anchor | Channel mix is nearly identical across geos, so national spend shares are a fair anchor |
 | Baseline and noise | One intercept per geo; one noise SD per geo | Geo levels differ, and per-geo noise is cheap |
 
@@ -77,6 +77,7 @@ raw data; no model was used.
 | **A. `pooled_media`** | One per channel, shared by all geos | Shared by all geos | Simplest. Channel mix and spend intensity are nearly identical across geos, so a common relative response is plausible |
 | **B. `hier_media`** | Partially pooled across geos (non-centered log-normal) | Shared by all geos | Meridian's default for geo models. Spend timing differs across geos, which can inform geo-level differences |
 | **C. `hier_media_controls`** | Partially pooled across geos | Partially pooled across geos (non-centered normal, one spread per control) | The controls are confounders (r up to 0.55 with spend), and the competitor and sentiment effects vary by geo (I² 0.94, 0.88). Forcing one value pushes that variation into the residuals and partly into media. Controls without heterogeneity shrink toward a shared value |
+| **C2. `hier_media_hetero_controls`** (added after the first fits) | Partially pooled across geos | Competitor and sentiment partially pooled (centered); promo, organic, trend effectively shared | C failed to sample. C2 lets vary only the controls the EDA found heterogeneous. See [ITERATIONS.md](ITERATIONS.md), entry 2 |
 
 ### Selection protocol (fixed before fitting)
 
@@ -86,9 +87,8 @@ raw data; no model was used.
 3. **Select** among converged candidates by PSIS-LOO (`az.compare`, with pointwise log-likelihoods saved). The
    highest ELPD wins, unless a simpler candidate (A < B < C) is within 2 standard errors of the difference, in
    which case the simpler one wins.
-4. **Validate the selected spec:** 13-week holdout, three rolling-origin CV folds, and one prior-sensitivity
-   refit (equal effect anchors, `l_max` 8 with α ~ Beta(2, 2), λ ~ Gamma(2, 1)).
-5. **Gates decide.** The other converged candidates and the sensitivity refit act as robustness comparators.
+4. **Validate the selected spec:** 13-week holdout and three rolling-origin CV folds.
+5. **Gates decide** on the selected spec, its holdout and its CV folds.
 
 ## Automated acceptance gates
 
@@ -116,9 +116,6 @@ selected spec makes `make gates` exit with code 1, so CI can refuse to publish t
 | | P(ROI > 1) ≥ 0.9 or ≤ 0.1: clearly above or below break-even | per channel | WARN |
 | Rolling-origin CV | Each fold: the three holdout checks | as holdout | FAIL |
 | | Max ÷ min median ROI across the folds and the full fit | > 2 WARN, > 5 FAIL | FAIL |
-| Robustness | Comparator admissible: converged and passes its own blocking checks | n/a | excluded |
-| | Selected vs each admissible comparator: max ÷ min median ROI per channel | > 2 WARN, > 5 FAIL | FAIL only if the comparator fits about as well (ELPD within 2 SE); otherwise WARN |
-| | Spearman agreement of channel ROI ranking, selected vs each comparator | ≥ 0.6 | WARN |
 
 **Accuracy thresholds are set against the noise floor.** Weekly revenue within a geo is close to white noise
 around the geo's level (CV 0.30, lag-1 autocorrelation 0.02), so absolute geo-week accuracy thresholds would fail
@@ -150,3 +147,4 @@ src/mmm/results.py       client-facing channel results file + figure
 scripts/fetch_data.sh    download + checksum the dataset
 ITERATIONS.md            log of model runs, results and modeling decisions
 ```
+

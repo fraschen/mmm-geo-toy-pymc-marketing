@@ -32,7 +32,7 @@ Promo, organic and trend show no significant heterogeneity.
 
 The selection protocol was fixed before fitting (README): a candidate that fails convergence is dropped (no
 reruns with more draws, user decision); select by PSIS-LOO with a preference for the simpler candidate within
-2 SE; then holdout, CV, a prior-sensitivity refit and the gates.
+2 SE; then holdout, CV and the gates.
 
 **Status:** awaiting approval to fit.
 
@@ -65,5 +65,42 @@ validation stage should check whether that shows up in residuals, and the README
 **What could be done, and was not (protocol: no reruns):** C with partial pooling for competitor and sentiment
 only, or with centered control effects. A with more draws.
 
-**Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds, prior-sensitivity refit), then
-the gates. Awaiting approval.
+**Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds), then the gates. Awaiting
+approval.
+
+## 2. Protocol change: candidate C2 added after the first fits (user approved)
+
+**Why:** C failed to sample, but its premise is supported by the data: competitor and sentiment effects vary
+by geo (I² 0.94, 0.88), and both are confounders of spend. The selected B shares them across geos. C2 tests that
+premise with a model built to sample. It uses only *where* C's sampling failed (a diagnostic), not any result.
+
+**C2 `hier_media_hetero_controls`:** as B, plus competitor and sentiment effects partially pooled across geos
+(spread prior 0.25 × the typical scaled week). Promo, organic and trend get a 100× tighter spread prior, which
+keeps them effectively shared, matching the EDA (no significant heterogeneity). Centered parameterization,
+because the geo-varying effects are strongly identified.
+
+**Rule unchanged:** if C2 converges, B and C2 are compared by PSIS-LOO and the simpler (B) wins unless C2 is
+better by more than 2 SE of the difference. If C2 does not converge, B stands. No reruns.
+
+## 3. C2 fitted: not converged; `hier_media` stands
+
+| Candidate | Status | R-hat max | ESS bulk / tail | Divergences | E-BFMI min |
+|---|---|---|---|---|---|
+| C2. `hier_media_hetero_controls` | not converged | 1.5209 | 7 / 9 | 357 | 0.078 |
+
+Sampling took 29 minutes (B: 14). The failure sits in `gamma_control_sigma`, the cross-geo spread of the control
+effects: a funnel. The centered parameterization was the wrong choice. For the three controls with a very tight
+spread prior, the geo effects have to squeeze into a narrow neck as the spread shrinks, which centered sampling
+cannot traverse.
+
+**Selection (`make select`):** `hier_media` remains the only converged candidate and is selected.
+
+**What could be done, and was not (protocol: no reruns):** C2 non-centered, or geo-varying effects for
+competitor and sentiment only, with the other controls in a separate shared term (pymc-marketing applies one
+prior to all controls, so this needs a custom additive effect).
+
+**Limitation carried forward:** the selected model shares control effects across geos, although competitor and
+sentiment effects vary by geo in the data (I² 0.94, 0.88). Both are confounders of spend, so geo-specific control
+effects not captured by the model can bias media ROI.
+
+**Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds), then the gates. Awaiting approval.

@@ -21,6 +21,11 @@
       "spec": "hier_media_controls",
       "status": "not converged",
       "reason": "R-hat max 1.0234 > 1.01; ESS bulk min 224 < 400; 4 divergences > 0"
+    },
+    {
+      "spec": "hier_media_hetero_controls",
+      "status": "not converged",
+      "reason": "R-hat max 1.5209 > 1.01; ESS bulk min 7 < 400; ESS tail min 9 < 400; 357 divergences > 0; E-BFMI min 0.078 < 0.3"
     }
   ]
 }
