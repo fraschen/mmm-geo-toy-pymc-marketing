@@ -18,8 +18,8 @@
   },
   "gate_verdict": "PASS_WITH_WARNINGS",
   "gate_counts": {
-    "n_pass": 107,
-    "n_warn": 22,
+    "n_pass": 96,
+    "n_warn": 19,
     "n_fail": 0
   },
   "period": [

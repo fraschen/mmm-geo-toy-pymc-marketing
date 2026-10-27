@@ -1,6 +1,6 @@
 # Gate report: **PASS_WITH_WARNINGS**
 
-107 pass, 22 warn, 0 fail, 1 skipped. Primary spec: `geo_hierarchical`.
+96 pass, 19 warn, 0 fail, 0 skipped. Primary spec: `geo_hierarchical`.
 
 ## geo_hierarchical
 
@@ -44,21 +44,7 @@
 | WARN | ESS tail min | 346 | 400 |  |
 | PASS | divergences | 0 | 0 |  |
 | PASS | E-BFMI min | 0.951 | 0.3 |  |
-| PASS | in-sample R2 | 0.6994 | 0.6 |  |
-| WARN | within-geo R2 (signal strength) | 0.0639 | 0.2 | share of week-to-week variance within a geo the model explains; low = weak media signal |
-| PASS | 94% PPC interval coverage | 0.943 | [0.85, 0.99] |  |
-| PASS | residual lag-1 autocorrelation (median |acf1| across geos) | 0.058 | 0.3 |  |
-| PASS | PSIS-LOO Pareto k > 0.7 share | 0.0 | 0.01 |  |
-| PASS | ROI identified by data, not prior: Channel0 | 0.77 | 0.3 | 1 - posterior sd / prior sd of ROI |
-| WARN | ROI clearly above or below break-even: Channel0 | 0.59 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
-| PASS | ROI identified by data, not prior: Channel1 | 0.774 | 0.3 | 1 - posterior sd / prior sd of ROI |
-| WARN | ROI clearly above or below break-even: Channel1 | 0.281 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
-| PASS | ROI identified by data, not prior: Channel2 | 0.639 | 0.3 | 1 - posterior sd / prior sd of ROI |
-| PASS | ROI clearly above or below break-even: Channel2 | 0.08 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
-| PASS | ROI identified by data, not prior: Channel3 | 0.942 | 0.3 | 1 - posterior sd / prior sd of ROI |
-| PASS | ROI clearly above or below break-even: Channel3 | 0.012 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
-| PASS | ROI identified by data, not prior: Channel4 | 0.861 | 0.3 | 1 - posterior sd / prior sd of ROI |
-| WARN | ROI clearly above or below break-even: Channel4 | 0.111 | [0.1, 0.9] | P(ROI > 1); in between = cannot say whether the channel pays back |
+| WARN | converged: results withheld | False |  | ESS bulk min 297 < 400; ESS tail min 346 < 400 |
 
 ## prior_sensitivity
 
@@ -153,7 +139,6 @@
 
 | status | check | value | threshold | detail |
 |---|---|---|---|---|
-| SKIP | pooled: comparator admissible | False | passes own blocking checks | excluded: fails its own blocking checks, so it cannot veto the primary |
 | PASS | prior_sensitivity: ROI agrees with primary: Channel0 | 1.81 | [2.0, 5.0] | geo_hierarchical=0.95, prior_sensitivity=1.73; primary ELPD +177 |
 | PASS | prior_sensitivity: ROI agrees with primary: Channel1 | 1.02 | [2.0, 5.0] | geo_hierarchical=0.64, prior_sensitivity=0.62; primary ELPD +177 |
 | WARN | prior_sensitivity: ROI agrees with primary: Channel2 | 3.57 | [2.0, 5.0] | geo_hierarchical=1.81, prior_sensitivity=0.51; primary ELPD +177 |

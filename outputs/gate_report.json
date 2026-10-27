@@ -2,9 +2,9 @@
   "verdict": "PASS_WITH_WARNINGS",
   "primary_spec": "geo_hierarchical",
   "n_fail": 0,
-  "n_warn": 22,
-  "n_skip": 1,
-  "n_pass": 107,
+  "n_warn": 19,
+  "n_skip": 0,
+  "n_pass": 96,
   "sections": {
     "geo_hierarchical": [
       {
@@ -306,142 +306,12 @@
         "detail": ""
       },
       {
-        "check": "in-sample R2",
-        "status": "PASS",
-        "value": 0.6994,
-        "threshold": 0.6,
-        "blocking": true,
-        "detail": ""
-      },
-      {
-        "check": "within-geo R2 (signal strength)",
+        "check": "converged: results withheld",
         "status": "WARN",
-        "value": 0.0639,
-        "threshold": 0.2,
+        "value": false,
+        "threshold": null,
         "blocking": false,
-        "detail": "share of week-to-week variance within a geo the model explains; low = weak media signal"
-      },
-      {
-        "check": "94% PPC interval coverage",
-        "status": "PASS",
-        "value": 0.943,
-        "threshold": [
-          0.85,
-          0.99
-        ],
-        "blocking": true,
-        "detail": ""
-      },
-      {
-        "check": "residual lag-1 autocorrelation (median |acf1| across geos)",
-        "status": "PASS",
-        "value": 0.058,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": ""
-      },
-      {
-        "check": "PSIS-LOO Pareto k > 0.7 share",
-        "status": "PASS",
-        "value": 0.0,
-        "threshold": 0.01,
-        "blocking": false,
-        "detail": ""
-      },
-      {
-        "check": "ROI identified by data, not prior: Channel0",
-        "status": "PASS",
-        "value": 0.77,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": "1 - posterior sd / prior sd of ROI"
-      },
-      {
-        "check": "ROI clearly above or below break-even: Channel0",
-        "status": "WARN",
-        "value": 0.59,
-        "threshold": [
-          0.1,
-          0.9
-        ],
-        "blocking": false,
-        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
-      },
-      {
-        "check": "ROI identified by data, not prior: Channel1",
-        "status": "PASS",
-        "value": 0.774,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": "1 - posterior sd / prior sd of ROI"
-      },
-      {
-        "check": "ROI clearly above or below break-even: Channel1",
-        "status": "WARN",
-        "value": 0.281,
-        "threshold": [
-          0.1,
-          0.9
-        ],
-        "blocking": false,
-        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
-      },
-      {
-        "check": "ROI identified by data, not prior: Channel2",
-        "status": "PASS",
-        "value": 0.639,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": "1 - posterior sd / prior sd of ROI"
-      },
-      {
-        "check": "ROI clearly above or below break-even: Channel2",
-        "status": "PASS",
-        "value": 0.08,
-        "threshold": [
-          0.1,
-          0.9
-        ],
-        "blocking": false,
-        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
-      },
-      {
-        "check": "ROI identified by data, not prior: Channel3",
-        "status": "PASS",
-        "value": 0.942,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": "1 - posterior sd / prior sd of ROI"
-      },
-      {
-        "check": "ROI clearly above or below break-even: Channel3",
-        "status": "PASS",
-        "value": 0.012,
-        "threshold": [
-          0.1,
-          0.9
-        ],
-        "blocking": false,
-        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
-      },
-      {
-        "check": "ROI identified by data, not prior: Channel4",
-        "status": "PASS",
-        "value": 0.861,
-        "threshold": 0.3,
-        "blocking": false,
-        "detail": "1 - posterior sd / prior sd of ROI"
-      },
-      {
-        "check": "ROI clearly above or below break-even: Channel4",
-        "status": "WARN",
-        "value": 0.111,
-        "threshold": [
-          0.1,
-          0.9
-        ],
-        "blocking": false,
-        "detail": "P(ROI > 1); in between = cannot say whether the channel pays back"
+        "detail": "ESS bulk min 297 < 400; ESS tail min 346 < 400"
       }
     ],
     "prior_sensitivity": [
@@ -1070,14 +940,6 @@
       }
     ],
     "cross-specification agreement": [
-      {
-        "check": "pooled: comparator admissible",
-        "status": "SKIP",
-        "value": false,
-        "threshold": "passes own blocking checks",
-        "blocking": true,
-        "detail": "excluded: fails its own blocking checks, so it cannot veto the primary"
-      },
       {
         "check": "prior_sensitivity: ROI agrees with primary: Channel0",
         "status": "PASS",

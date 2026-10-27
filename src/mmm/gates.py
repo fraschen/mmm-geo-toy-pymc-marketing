@@ -26,7 +26,7 @@ def _check(name, value, ok, *, warn=False, blocking=True, threshold=None, detail
 
 
 def spec_checks(m: dict, ch: pd.DataFrame, g: dict) -> list[dict]:
-    d, c, f, lo = m["data_checks"], m["convergence"], m["fit"], m["loo"]
+    d, c, f, lo = m["data_checks"], m["convergence"], m.get("fit"), m.get("loo")
     out = [
         _check("data: required columns present", d["missing_columns"], not d["missing_columns"]),
         _check("data: balanced weekly panel, no missing values",
@@ -42,6 +42,12 @@ def spec_checks(m: dict, ch: pd.DataFrame, g: dict) -> list[dict]:
         _check("ESS tail min", round(c["ess_tail_min"]), c["ess_tail_min"] >= g["ess_tail_min"], threshold=g["ess_tail_min"]),
         _check("divergences", c["divergences"], c["divergences"] <= g["divergences_max"], threshold=g["divergences_max"]),
         _check("E-BFMI min", round(c["bfmi_min"], 3), c["bfmi_min"] >= g["bfmi_min"], threshold=g["bfmi_min"]),
+    ]
+    if m.get("status") == "not_converged":
+        # the run stopped after sampling: no fit, ROI or channel results exist for it
+        return out + [_check("converged: results withheld", False, False,
+                             detail="; ".join(m.get("convergence_failures", [])))]
+    d_fit = [
         _check("in-sample R2", round(f["r2"], 4), f["r2"] >= g["in_sample_r2_min"], threshold=g["in_sample_r2_min"]),
         _check("within-geo R2 (signal strength)", round(f["within_geo_r2"], 4), f["within_geo_r2"] >= g["within_geo_r2_min"],
                threshold=g["within_geo_r2_min"], warn=True,
@@ -54,6 +60,7 @@ def spec_checks(m: dict, ch: pd.DataFrame, g: dict) -> list[dict]:
         _check("PSIS-LOO Pareto k > 0.7 share", round(lo["pareto_k_bad_share"], 4),
                lo["pareto_k_bad_share"] <= g["pareto_k_bad_share_max"], threshold=g["pareto_k_bad_share_max"], warn=True),
     ]
+    out += d_fit
     for _, r in ch.iterrows():
         out.append(_check(f"ROI identified by data, not prior: {r.channel}", round(r.roi_prior_contraction, 3),
                           r.roi_prior_contraction >= g["roi_prior_contraction_min"],
@@ -149,10 +156,14 @@ def main() -> int:
             sections[s] = [_check("fit exists", None, False, detail=f"run `make fit SPEC={s}`")]
             continue
         m = json.loads((p / "metrics.json").read_text())
-        chans[s] = pd.read_csv(p / "channel_metrics.csv")
-        sections[s] = spec_checks(m, chans[s], g)
-        elpd[s] = m["loo"]["elpd_loo"]
-        admissible[s] = not any(r["status"] == "FAIL" for r in sections[s])
+        if m.get("status") == "not_converged":
+            sections[s] = spec_checks(m, None, g)
+            admissible[s] = False
+        else:
+            chans[s] = pd.read_csv(p / "channel_metrics.csv")
+            sections[s] = spec_checks(m, chans[s], g)
+            elpd[s] = m["loo"]["elpd_loo"]
+            admissible[s] = not any(r["status"] == "FAIL" for r in sections[s])
         # non-primary specs are evidence for robustness; their own failures are not blocking
         if s != primary:
             for r in sections[s]:

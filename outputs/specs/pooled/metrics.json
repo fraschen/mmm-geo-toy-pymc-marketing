@@ -98,16 +98,10 @@
       "channel_contribution": 699.1227205754078
     }
   },
-  "fit": {
-    "r2": 0.6993683430107442,
-    "within_geo_r2": 0.06394211839703812,
-    "mape": 0.31138799982028476,
-    "ppc_interval_coverage": 0.9427884615384615,
-    "residual_acf1_median_abs": 0.05793497542964761
-  },
-  "loo": {
-    "elpd_loo": 7313.924704860365,
-    "elpd_loo_se": 68.0563295729458,
-    "pareto_k_bad_share": 0.0
-  }
+  "train_weeks": null,
+  "status": "not_converged",
+  "convergence_failures": [
+    "ESS bulk min 297 < 400",
+    "ESS tail min 346 < 400"
+  ]
 }

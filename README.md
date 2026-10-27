@@ -8,7 +8,7 @@ uncertainty. Automated pass/fail gates decide whether a fit is acceptable, so no
 ## Verdict: is this good enough for a client?
 
 **Yes, as a caveated read of channel performance; not yet as a basis for reallocating the largest budgets.**
-The automated verdict is **PASS_WITH_WARNINGS**: 107 pass, 22 warn, 0 fail, and 1 comparator skipped (full
+The automated verdict is **PASS_WITH_WARNINGS**: 96 pass, 19 warn, 0 fail (full
 evidence in [`outputs/gate_report.md`](outputs/gate_report.md)).
 
 **Why it passes.** The primary model (`geo_hierarchical`, media effects partially pooled across geos):
@@ -27,11 +27,11 @@ evidence in [`outputs/gate_report.md`](outputs/gate_report.md)).
 - **Three channels are undetermined around break-even.** Channel0 (P = 0.47), Channel1 (0.20) and Channel3
   (0.51) cannot be called either way. Channel0 and Channel3 together take 59% of spend, so the model cannot yet
   say whether the biggest budgets pay back.
-- **The answer depends on geo-level pooling.** Models that force one media effect on every geo
-  (`pooled`, `prior_sensitivity`) rank channels differently. For example, they put Channel2 at 0.35–0.51
-  instead of 1.8. Those models fit clearly worse (ELPD about 180 lower) and `pooled` does not converge, so under
-  the gate rules they cannot veto the primary. But a client should know the conclusion rests on media response
-  varying by geo, which is also how Meridian, the simulator behind this data, models geos.
+- **The answer depends on geo-level pooling.** The converged model that forces one media effect on every geo
+  (`prior_sensitivity`) ranks channels differently. For example, it puts Channel2 at 0.51 instead of 1.8. It fits
+  clearly worse (ELPD about 177 lower), so under the gate rules this is a warning, not a veto. But a client should
+  know the conclusion rests on media response varying by geo, which is also how Meridian, the simulator behind
+  this data, models geos.
 - **The media share of revenue (about 16%) is uncertain.** Baseline and media trade off in the posterior
   (correlation −0.93), so how much of revenue is "media" rests on model structure, not experiments.
 - **Weekly geo revenue is mostly noise.** The model explains 14% of within-geo weekly variation.
@@ -85,7 +85,7 @@ assumptions and the results are checked for agreement.
 | Spec | Media effect size | Other differences |
 |---|---|---|
 | `geo_hierarchical` (**primary**) | Partially pooled across geos | n/a |
-| `pooled` | One value per channel, shared by all geos | n/a |
+| `pooled` | One value per channel, shared by all geos | Did not converge: no results reported |
 | `prior_sensitivity` | One value per channel, shared by all geos | Equal rather than spend-share effect priors, longer and slower-decaying adstock (`l_max` 12, `Beta(2,2)`), flatter saturation prior |
 | `hierarchical_prior_sensitivity` | Partially pooled across geos | Same alternative priors as `prior_sensitivity`, applied to the primary's structure: tests the primary's own prior choices |
 
@@ -93,28 +93,26 @@ The final model is always fitted on the full dataset. The 13-week holdout refit 
 
 ### Why the pooled model was ruled out as primary
 
-`pooled` was the original primary spec. It was replaced by `geo_hierarchical` (see [ITERATIONS.md](ITERATIONS.md),
-entries 3–4) because:
+`pooled` was the original primary spec. **It did not converge** (bulk ESS 297, tail ESS 346 < 400 at 1000
+draws), so it was replaced by `geo_hierarchical` (see [ITERATIONS.md](ITERATIONS.md), entries 3–4).
 
-- **It fits worse.** ELPD-LOO is ~180 lower and within-geo R² is half (0.064 vs 0.140). One media effect size for
-  all 40 geos leaves geo-specific response in the residuals.
-- **It misses the convergence standard.** Bulk ESS is 297 at 1000 draws (< 400). Its individual parameters mix
-  well; the slow direction is total media against the 40 geo intercepts (r = −0.95). With shared effect sizes,
-  more media requires every intercept to move down together: a long, narrow ridge through 45 coupled parameters.
-  Partial pooling splits that into per-geo tradeoffs, and total media mixes with ESS 967.
-- **Its ROI is unstable.** Dropping the last 13 weeks moves Ch0's median ROI from 1.21 to 0.66.
-- **Partial pooling is the standard for geo MMMs.** It is the default in Google Meridian, which generated this
-  dataset, and in PyMC Labs' `mmm-modeling` guidance.
+**A non-converged fit has not produced valid estimates, so the pipeline stops there.** It records the
+convergence diagnostics and computes no fit metrics, ROI or channel results. `pooled` therefore appears in the
+gate report only through the checks that disqualified it, and in no result, comparison or figure.
+
+**Why it mixes slowly** (a sampler diagnosis, not a result): its individual parameters mix well, but with one
+effect size per channel shared by all geos, raising total media requires all 40 geo intercepts to move down
+together. That is a long, narrow ridge through 45 coupled parameters. Partial pooling splits it into per-geo
+tradeoffs, and the primary mixes with ESS ≥ 840. Partial pooling is also the standard for geo MMMs: it is the
+default in Google Meridian, which generated this dataset, and in PyMC Labs' `mmm-modeling` guidance.
 
 **Caveats: what could have been done and wasn't.**
-- Rerunning `pooled` at 2000 draws would likely have cleared the ESS threshold, but not the worse fit or the
-  unstable ROI.
-- An informative prior on the baseline share would ease the baseline–media ridge in both specs, but it needs an
-  outside justification.
-- The ~180-point ELPD gap has no formal standard error: pointwise log-likelihoods were not saved, so `az.compare`
-  was not run.
-- `pooled` stays in the pipeline for reference. It fails its own convergence check, so the gates exclude it from
-  the cross-specification comparison (reported as SKIP).
+- Rerunning `pooled` at 2000 draws would likely have cleared the ESS threshold (ESS per draw ~0.07). It was not
+  pursued because a converged partially pooled model was already available.
+- An informative prior on the baseline share would ease the baseline–media ridge, but it needs an outside
+  justification.
+- ELPD differences between specs have no formal standard error: pointwise log-likelihoods were not saved, so
+  `az.compare` was not run.
 
 ### How this compares with Google Meridian
 
@@ -149,7 +147,7 @@ primary spec makes `make gates` exit with code 1, so CI can refuse to publish th
 | | P(ROI > 1) ≥ 0.9 or ≤ 0.1: clearly above or below break-even | per channel | WARN |
 | Rolling-origin CV | Each fold (training on weeks 1–104, 1–117, 1–130, then forecasting the next 13): same three holdout checks | as holdout | FAIL |
 | | Max ÷ min median ROI across the folds and the full fit | > 2 WARN, > 5 FAIL | FAIL |
-| Robustness | Comparator admissible: passes its own blocking checks | n/a | SKIP (excluded) |
+| Robustness | Comparator admissible: converged and passes its own blocking checks | n/a | excluded from comparison |
 | | Primary vs each admissible comparator: max ÷ min median ROI per channel | > 2 WARN, > 5 FAIL | FAIL only if the comparator fits about as well (ELPD within 10); otherwise WARN |
 | | Spearman agreement of channel ROI ranking, primary vs each comparator | ≥ 0.6 | WARN |
 
@@ -176,16 +174,17 @@ warning.
 Primary spec (`geo_hierarchical`), full period 2021-01-25 to 2024-01-15. ROI is incremental revenue per unit of
 spend. Full detail is in [`outputs/channel_results.csv`](outputs/channel_results.csv).
 
-| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Share of revenue | ROI range across CV folds | ROI range across all specs* | Gate |
+| Channel | Spend share | ROI median (94% HDI) | P(ROI > 1) | Marginal ROI | Share of revenue | ROI range across CV folds | ROI range across converged specs* | Gate |
 |---|---|---|---|---|---|---|---|---|
 | Channel0 | 18.5% | 0.95 (0.28–1.86) | 0.47 | 0.88 | 3.1% | 0.76–1.16 | 0.95–1.73 | WARN |
 | Channel1 | 14.3% | 0.64 (0.22–1.39) | 0.20 | 0.61 | 1.7% | 0.56–0.70 | 0.62–0.72 | WARN |
-| Channel2 | 5.5% | 1.81 (0.97–2.94) | 0.98 | 1.66 | 1.7% | 1.38–2.07 | 0.35–1.82 | WARN |
+| Channel2 | 5.5% | 1.81 (0.97–2.94) | 0.98 | 1.66 | 1.7% | 1.38–2.07 | 0.51–1.82 | WARN |
 | Channel3 | 40.0% | 1.00 (0.69–1.35) | 0.51 | 0.89 | 6.8% | 1.05–1.10 | 0.21–1.01 | WARN |
-| Channel4 | 21.7% | 0.75 (0.52–1.02) | 0.04 | 0.71 | 2.7% | 0.71–0.82 | 0.18–0.75 | WARN |
+| Channel4 | 21.7% | 0.75 (0.52–1.02) | 0.04 | 0.71 | 2.7% | 0.71–0.82 | 0.30–0.75 | WARN |
 
-\* All four specs, including the excluded `pooled`. The two partially pooled specs agree within 1.24× on every
-channel. The spread comes from the fully pooled specs.
+\* `geo_hierarchical`, `hierarchical_prior_sensitivity` and `prior_sensitivity` (`pooled` did not converge and
+has no results). The two partially pooled specs agree within 1.24× on every channel. The spread comes from the
+fully pooled `prior_sensitivity`.
 
 ![Channel ROI by model specification](outputs/figures/roi_by_spec.png)
 
@@ -220,7 +219,7 @@ fit and convergence summaries, and package versions.
   geos and from aggregation, so channel ROIs will be wide.
 - **Baseline and media are hard to separate.** With no experiments, the model cannot pin down how much of the
   revenue level is baseline and how much is media. Total media contribution and the summed geo intercepts are
-  correlated at −0.93 in the primary posterior (−0.95 in `pooled`). The 16% media share should be read as
+  correlated at −0.93 in the primary posterior. The 16% media share should be read as
   uncertain, not as a point fact.
 - **Channel ROI depends on the pooling assumption.** Partial pooling fits much better (ELPD about 180 higher) and
   is insensitive to its priors, but the shared-effect specifications rank channels differently. Fit to revenue

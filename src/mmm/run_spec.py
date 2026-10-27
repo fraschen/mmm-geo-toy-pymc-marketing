@@ -90,6 +90,34 @@ def convergence(idata) -> dict:
     }
 
 
+def convergence_failures(c: dict, g: dict) -> list[str]:
+    """Blocking convergence checks (same thresholds as the gates). Empty list = converged."""
+    fails = []
+    if c["rhat_max"] > g["rhat_max"]:
+        fails.append(f"R-hat max {c['rhat_max']:.4f} > {g['rhat_max']}")
+    if c["ess_bulk_min"] < g["ess_bulk_min"]:
+        fails.append(f"ESS bulk min {c['ess_bulk_min']:.0f} < {g['ess_bulk_min']}")
+    if c["ess_tail_min"] < g["ess_tail_min"]:
+        fails.append(f"ESS tail min {c['ess_tail_min']:.0f} < {g['ess_tail_min']}")
+    if c["divergences"] > g["divergences_max"]:
+        fails.append(f"{c['divergences']} divergences > {g['divergences_max']}")
+    if c["bfmi_min"] < g["bfmi_min"]:
+        fails.append(f"E-BFMI min {c['bfmi_min']:.3f} < {g['bfmi_min']}")
+    return fails
+
+
+def save_posterior(mmm, path) -> None:
+    # Keep parameter draws, sampler stats and non-time quantities (a few MB). The
+    # posterior also holds per-date deterministics (mu, contributions: ~4 GB) and
+    # predictive draws; all are regenerable from the parameters with the code.
+    groups = {}
+    for g in ("posterior", "sample_stats", "prior"):
+        if g in mmm.idata.children:
+            ds = mmm.idata[g].to_dataset()
+            groups[g] = ds[[v for v in ds.data_vars if g == "sample_stats" or "date" not in ds[v].dims]]
+    xr.DataTree.from_dict(groups).to_netcdf(path)
+
+
 def fit_quality(mmm, md: data.ModelData, ypp_scaled: xr.DataArray) -> tuple[dict, pd.DataFrame]:
     """In-sample posterior predictive fit (original scale)."""
     geo = md.geo_column
@@ -253,6 +281,18 @@ def main(argv=None) -> None:
         "convergence": convergence(mmm.idata),
     }
 
+    # A fit that fails its convergence checks has not produced valid estimates: record why and stop.
+    # No fit metrics, ROI or channel results are computed for it, so none can be reported.
+    fails = convergence_failures(metrics["convergence"], cfg["gates"])
+    metrics["status"] = "not_converged" if fails else "converged"
+    metrics["convergence_failures"] = fails
+    if fails:
+        with open(out / "metrics.json", "w") as f:
+            json.dump(metrics, f, indent=2, default=float)
+        save_posterior(mmm, art / "posterior.nc")  # kept for diagnosing the sampler, not for results
+        print(f"[{run}] NOT CONVERGED ({'; '.join(fails)}); stopping without results -> {out}")
+        return
+
     ypp = mmm.sample_posterior_predictive(md.X, extend_idata=True, combined=False, random_seed=seed, progressbar=False)
     ypp = ypp["y"] if isinstance(ypp, xr.Dataset) else ypp
     fq, per_geo = fit_quality(mmm, md, ypp)
@@ -270,15 +310,7 @@ def main(argv=None) -> None:
 
     with open(out / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2, default=float)
-    # Keep parameter draws, sampler stats and non-time quantities (a few MB). The
-    # posterior also holds per-date deterministics (mu, contributions: ~4 GB) and
-    # predictive draws; all are regenerable from the parameters with the code.
-    groups = {}
-    for g in ("posterior", "sample_stats", "prior"):
-        if g in mmm.idata.children:
-            ds = mmm.idata[g].to_dataset()
-            groups[g] = ds[[v for v in ds.data_vars if g == "sample_stats" or "date" not in ds[v].dims]]
-    xr.DataTree.from_dict(groups).to_netcdf(art / "posterior.nc")
+    save_posterior(mmm, art / "posterior.nc")
     print(f"[{run}] done in {(time.time() - t0) / 60:.1f} min -> {out}")
     print(ch[["channel", "roi_median", "roi_hdi94_low", "roi_hdi94_high", "mroi_median", "roi_prior_contraction"]].round(2).to_string(index=False))
 
