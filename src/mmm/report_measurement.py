@@ -569,9 +569,10 @@ Main scenario detail ([`outputs/budget_scenario.csv`](../outputs/budget_scenario
 ![Scenario](figures/meas_scenario.png)
 
 **How to read this.** Money moves from channels with low marginal ROI to channels with high marginal ROI until
-the limit (±20%) binds. The ±20% range stays close to spend levels the data has seen. The ±50% stress
-scenario extrapolates further along the curves, where the saturation shape rests more on the prior; treat it
-as an upper bound, not a plan.
+the limit (±20%) binds. The ±50% scenario has a larger expected gain and a wider interval, which includes a small
+chance of a loss: that spread is part of the answer, and how much risk to take is a business decision. The ±20%
+range stays close to spend levels the data has seen; further out, the intervals also rest on the assumed logistic
+shape of the response curve, which they do not include uncertainty about.
 
 ## 5. Caveats for using these numbers
 

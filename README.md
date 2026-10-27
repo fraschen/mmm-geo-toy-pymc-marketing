@@ -8,8 +8,8 @@ looking at plots.
 
 ## Verdict: is this good enough for a client?
 
-**Yes, as a caveated read of channel performance and for modest reallocations (±20%); not yet for large budget
-moves.** The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail; evidence in
+**Yes, with the caveats below.** The model is fit to inform channel and budget decisions, and its uncertainty
+is part of what it delivers. The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 fail; evidence in
 [`reports/diagnostics.md`](reports/diagnostics.md) and [`outputs/gate_report.md`](outputs/gate_report.md)).
 
 **Why it can be shown.** The selected model (`hier_media`):
@@ -26,6 +26,9 @@ moves.** The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 f
 - **A budget-neutral shift of up to ±20% per channel**, from Channel0, Channel1 and Channel4 into Channel2 and
   Channel3, gains an estimated **+3.6M revenue over 52 weeks** (94% HDI +0.8M to +7.1M; P(gain > 0) = 0.98),
   about 0.8% of revenue.
+- **A shift of up to ±50%** has a larger expected gain, **+7.2M** (94% HDI −0.2M to +16.0M; P(gain > 0) = 0.96).
+  The wider range is the model's honest statement of how much is at stake; the business weighs it against its
+  appetite for risk.
 
 **Caveats that must go with the numbers:**
 - **Control effects are shared across geos,** although the competitor and sentiment effects vary by geo
@@ -34,7 +37,9 @@ moves.** The automated gates return **PASS_WITH_WARNINGS** (41 pass, 4 warn, 0 f
   contributions.
 - **National forecast intervals are too narrow out-of-sample** (69–92% coverage for a 94% interval), because
   baseline level shifts are not in the model.
-- **Large reallocations extrapolate** beyond observed spend: the ±50% scenario's interval reaches below zero.
+- **Intervals beyond observed spend assume the logistic response-curve shape.** They include uncertainty about
+  every parameter but not about the curve's form, so the ±50% interval is, if anything, optimistic about its own
+  width.
 
 **What would make it fully client-ready:** lift tests on the large undetermined budgets (Channel4, 21.7% of
 spend; Channel0, 18.5%), calibrated into the model, and the next-step model fixes below.
