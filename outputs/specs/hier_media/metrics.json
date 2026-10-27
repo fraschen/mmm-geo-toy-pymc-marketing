@@ -1,0 +1,119 @@
+{
+  "run": "hier_media",
+  "spec": "hier_media",
+  "holdout": false,
+  "train_weeks": null,
+  "spec_config": {
+    "description": "Media effects partially pooled across geos; control effects shared.",
+    "scaling": "population",
+    "yearly_seasonality": null,
+    "l_max": 4,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "hierarchical",
+    "control_pooling": "pooled"
+  },
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "data_checks": {
+    "missing_columns": [],
+    "n_rows": 6240,
+    "n_geos": 40,
+    "n_weeks": 156,
+    "balanced_panel": true,
+    "weekly_contiguous": true,
+    "n_missing_values": 0,
+    "negative_spend_cells": 0,
+    "negative_kpi_cells": 0,
+    "revenue_per_kpi_cv": 0.0049588969574893725,
+    "channel_zero_spend_share": {
+      "Channel0": 0.12099358974358974,
+      "Channel1": 0.2791666666666667,
+      "Channel2": 0.6426282051282052,
+      "Channel3": 0.027083333333333334,
+      "Channel4": 0.13141025641025642
+    },
+    "date_min": "2021-01-25",
+    "date_max": "2024-01-15"
+  },
+  "n_obs_fit": 6240,
+  "fit_minutes": 13.64,
+  "prior_predictive_coverage": 1.0,
+  "convergence": {
+    "rhat_max": 1.0053928640118677,
+    "ess_bulk_min": 532.0845545968499,
+    "ess_tail_min": 895.9185106937186,
+    "divergences": 0,
+    "divergence_rate": 0.0,
+    "bfmi_min": 0.8462879377643353,
+    "n_draws_total": 4000,
+    "rhat_by_var": {
+      "gamma_control": 1.0019025913449175,
+      "saturation_beta_raw_offset": 1.0036438625323427,
+      "saturation_beta_raw_mu": 1.0015267800855265,
+      "intercept_contribution": 1.0033469819464946,
+      "y_sigma": 1.0024806732597886,
+      "adstock_alpha": 1.0033585383350216,
+      "saturation_lam": 1.001775856579054,
+      "saturation_beta_raw_sigma": 1.0017049227573216,
+      "y_original_scale": 1.0038961939820379,
+      "intercept_contribution_original_scale": 1.0033469819464946,
+      "control_contribution_original_scale": 1.0019051056022803,
+      "channel_contribution_original_scale": 1.0053928640118677,
+      "total_media_contribution_original_scale": 1.00281050055554,
+      "mu": 1.0041543482592077,
+      "control_contribution": 1.0019051056022803,
+      "channel_contribution": 1.0053928640118677,
+      "saturation_beta": 1.00415891901821,
+      "saturation_beta_raw": 1.00415891901821
+    },
+    "ess_bulk_by_var": {
+      "gamma_control": 2444.9354840181504,
+      "saturation_beta_raw_offset": 1158.811760899703,
+      "saturation_beta_raw_mu": 1438.2873684556216,
+      "intercept_contribution": 1110.0949146053035,
+      "y_sigma": 3759.7671366203713,
+      "adstock_alpha": 593.9440080003151,
+      "saturation_lam": 1103.2124721079379,
+      "saturation_beta_raw_sigma": 1704.2384156341714,
+      "y_original_scale": 2570.883510722119,
+      "intercept_contribution_original_scale": 1110.0949146053035,
+      "control_contribution_original_scale": 2444.9354840181504,
+      "channel_contribution_original_scale": 532.0845545968499,
+      "total_media_contribution_original_scale": 705.2437448971946,
+      "mu": 804.893319760323,
+      "control_contribution": 2444.9354840181504,
+      "channel_contribution": 532.0845545968499,
+      "saturation_beta": 1443.8682448411741,
+      "saturation_beta_raw": 1443.8682448411741
+    }
+  },
+  "status": "converged",
+  "convergence_failures": [],
+  "fit": {
+    "r2": 0.7290754156522241,
+    "within_geo_r2": 0.15643916200147345,
+    "mape": 0.2954585097177305,
+    "ppc_interval_coverage": 0.9482371794871794,
+    "residual_acf1_median_abs": 0.06028439424777496
+  },
+  "loo": {
+    "elpd_loo": 4070.657150918745,
+    "elpd_loo_se": 55.06987182139847,
+    "pareto_k_bad_share": 0.0
+  }
+}

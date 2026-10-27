@@ -152,7 +152,10 @@ def loo(mmm, idata) -> dict:
         pm.compute_log_likelihood(idata, extend_inferencedata=True, progressbar=False)
     res = az.loo(idata, pointwise=True)
     k = np.asarray(res.pareto_k).ravel()
-    return {"elpd_loo": float(res.elpd), "elpd_loo_se": float(res.se), "pareto_k_bad_share": float((k > 0.7).mean())}
+    summary = {"elpd_loo": float(res.elpd), "elpd_loo_se": float(res.se), "pareto_k_bad_share": float((k > 0.7).mean())}
+    # pointwise ELPD per (date, geo): lets model selection compute the SE of an ELPD difference
+    pointwise = res.elpd_i.to_series().rename("elpd_i").reset_index()
+    return summary, pointwise
 
 
 def channel_metrics(mmm, md: data.ModelData, roi_prior: dict, n_samples: int, seed: int) -> pd.DataFrame:
@@ -298,7 +301,8 @@ def main(argv=None) -> None:
     fq, per_geo = fit_quality(mmm, md, ypp)
     metrics["fit"] = fq
     per_geo.to_csv(out / "per_geo_fit.csv", index=False)
-    metrics["loo"] = loo(mmm, mmm.idata)
+    metrics["loo"], elpd_i = loo(mmm, mmm.idata)
+    elpd_i.to_csv(out / "elpd_pointwise.csv", index=False)
 
     if test is not None:
         metrics["holdout_scores"] = holdout_scores(mmm, test, seed)

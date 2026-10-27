@@ -1,0 +1,9 @@
+Sampling: [adstock_alpha, gamma_control_mu, gamma_control_offset, gamma_control_sigma, intercept_contribution, saturation_beta_raw_mu, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_lam, y, y_sigma]
+[hier_media_controls] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_control_offset, gamma_control_sigma, gamma_control_mu, adstock_alpha, saturation_lam, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_beta_raw_mu, intercept_contribution]
+There were 4 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[hier_media_controls] sampled in 6.9 min
+[hier_media_controls] NOT CONVERGED (R-hat max 1.0234 > 1.01; ESS bulk min 224 < 400; 4 divergences > 0); stopping without results -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/hier_media_controls

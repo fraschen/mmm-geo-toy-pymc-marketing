@@ -81,9 +81,8 @@ raw data; no model was used.
 ### Selection protocol (fixed before fitting)
 
 1. **Fit all three** on the full data: 4 chains × 1000 draws, 1000 tuning steps, `target_accept` 0.95.
-2. **Convergence.** A fit that fails R-hat, ESS, divergence or E-BFMI checks stops without results. If the only
-   failure is ESS, it is rerun once at 2000 draws (`target_accept` unchanged). A candidate that still fails is
-   dropped.
+2. **Convergence.** A fit that fails R-hat, ESS, divergence or E-BFMI checks stops without results, and the
+   candidate is dropped. There are no reruns with more draws.
 3. **Select** among converged candidates by PSIS-LOO (`az.compare`, with pointwise log-likelihoods saved). The
    highest ELPD wins, unless a simpler candidate (A < B < C) is within 2 standard errors of the difference, in
    which case the simpler one wins.

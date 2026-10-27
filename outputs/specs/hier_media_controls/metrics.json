@@ -1,0 +1,117 @@
+{
+  "run": "hier_media_controls",
+  "spec": "hier_media_controls",
+  "holdout": false,
+  "train_weeks": null,
+  "spec_config": {
+    "description": "Media and control effects partially pooled across geos.",
+    "scaling": "population",
+    "yearly_seasonality": null,
+    "l_max": 4,
+    "adstock_alpha": {
+      "dist": "Beta",
+      "alpha": 1,
+      "beta": 3
+    },
+    "saturation_lam": {
+      "dist": "Gamma",
+      "alpha": 3,
+      "beta": 1
+    },
+    "beta_prior": "spend_share",
+    "beta_pooling": "hierarchical",
+    "control_pooling": "hierarchical"
+  },
+  "sampler": {
+    "nuts_sampler": "numpyro",
+    "chains": 4,
+    "tune": 1000,
+    "draws": 1000,
+    "target_accept": 0.95
+  },
+  "data_checks": {
+    "missing_columns": [],
+    "n_rows": 6240,
+    "n_geos": 40,
+    "n_weeks": 156,
+    "balanced_panel": true,
+    "weekly_contiguous": true,
+    "n_missing_values": 0,
+    "negative_spend_cells": 0,
+    "negative_kpi_cells": 0,
+    "revenue_per_kpi_cv": 0.0049588969574893725,
+    "channel_zero_spend_share": {
+      "Channel0": 0.12099358974358974,
+      "Channel1": 0.2791666666666667,
+      "Channel2": 0.6426282051282052,
+      "Channel3": 0.027083333333333334,
+      "Channel4": 0.13141025641025642
+    },
+    "date_min": "2021-01-25",
+    "date_max": "2024-01-15"
+  },
+  "n_obs_fit": 6240,
+  "fit_minutes": 6.94,
+  "prior_predictive_coverage": 1.0,
+  "convergence": {
+    "rhat_max": 1.0233839316523403,
+    "ess_bulk_min": 224.29636502146326,
+    "ess_tail_min": 431.049212573475,
+    "divergences": 4,
+    "divergence_rate": 0.0010000000474974513,
+    "bfmi_min": 0.8088458872889677,
+    "n_draws_total": 4000,
+    "rhat_by_var": {
+      "gamma_control_offset": 1.0180155110295164,
+      "gamma_control_mu": 1.0233839316523403,
+      "saturation_beta_raw_offset": 1.0048864653534098,
+      "saturation_beta_raw_mu": 1.002260035407716,
+      "intercept_contribution": 1.0077225818623323,
+      "y_sigma": 1.0031304269392232,
+      "gamma_control_sigma": 1.0189344185739277,
+      "adstock_alpha": 1.0016139874089847,
+      "saturation_lam": 1.0025530393085005,
+      "saturation_beta_raw_sigma": 1.0147245263487965,
+      "y_original_scale": 1.0037427257784028,
+      "intercept_contribution_original_scale": 1.0077225818623323,
+      "control_contribution_original_scale": 1.005386579290591,
+      "channel_contribution_original_scale": 1.0078237271402248,
+      "total_media_contribution_original_scale": 1.0079293002553562,
+      "mu": 1.0053671609994872,
+      "control_contribution": 1.005386579290591,
+      "gamma_control": 1.0053852197557311,
+      "channel_contribution": 1.0078237271402248,
+      "saturation_beta": 1.0038029932554586,
+      "saturation_beta_raw": 1.0055380880612597
+    },
+    "ess_bulk_by_var": {
+      "gamma_control_offset": 345.91977495884316,
+      "gamma_control_mu": 224.29636502146326,
+      "saturation_beta_raw_offset": 2003.785198335701,
+      "saturation_beta_raw_mu": 2654.9297112266595,
+      "intercept_contribution": 939.2330005698382,
+      "y_sigma": 5324.050800690541,
+      "gamma_control_sigma": 395.8071420544771,
+      "adstock_alpha": 2556.583249923219,
+      "saturation_lam": 1475.103662344792,
+      "saturation_beta_raw_sigma": 332.18634862453155,
+      "y_original_scale": 2988.147180122183,
+      "intercept_contribution_original_scale": 939.2330005698382,
+      "control_contribution_original_scale": 1365.5202663856235,
+      "channel_contribution_original_scale": 844.2770204077631,
+      "total_media_contribution_original_scale": 685.2898640310917,
+      "mu": 1725.5176896485675,
+      "control_contribution": 1365.5202663856235,
+      "gamma_control": 1365.5202663856235,
+      "channel_contribution": 844.2770204077631,
+      "saturation_beta": 1885.5473193910639,
+      "saturation_beta_raw": 1885.5473193910639
+    }
+  },
+  "status": "not_converged",
+  "convergence_failures": [
+    "R-hat max 1.0234 > 1.01",
+    "ESS bulk min 224 < 400",
+    "4 divergences > 0"
+  ]
+}

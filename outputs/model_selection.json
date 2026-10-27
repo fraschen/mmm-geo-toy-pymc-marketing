@@ -1,0 +1,26 @@
+{
+  "best_elpd": "hier_media",
+  "selected": "hier_media",
+  "rule": "simplest candidate within 2 SE of the best ELPD",
+  "candidates": [
+    {
+      "spec": "pooled_media",
+      "status": "not converged",
+      "reason": "R-hat max 1.0117 > 1.01; ESS bulk min 270 < 400"
+    },
+    {
+      "spec": "hier_media",
+      "status": "converged",
+      "elpd_loo": 4070.657150918745,
+      "elpd_loo_se": 55.06987182139847,
+      "elpd_diff_from_best": 0.0,
+      "se_diff": 0.0,
+      "within_2se_of_best": true
+    },
+    {
+      "spec": "hier_media_controls",
+      "status": "not converged",
+      "reason": "R-hat max 1.0234 > 1.01; ESS bulk min 224 < 400; 4 divergences > 0"
+    }
+  ]
+}

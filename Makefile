@@ -1,10 +1,10 @@
 # On macOS, keep the machine from sleeping while a fit runs (no-op elsewhere)
 KEEPAWAKE := $(shell command -v caffeinate >/dev/null 2>&1 && echo caffeinate -i -s)
 PY := PYTHONPATH=src $(KEEPAWAKE) .venv/bin/python -u -W ignore
-SPECS := pooled geo_hierarchical prior_sensitivity hierarchical_prior_sensitivity
-PRIMARY := geo_hierarchical
+SPECS := pooled_media hier_media hier_media_controls
+PRIMARY := $(shell .venv/bin/python -c "import yaml;print(yaml.safe_load(open('config/pipeline.yaml'))['primary_spec'])")
 
-.PHONY: all setup data eda fit holdout cv fit-all gates results clean
+.PHONY: all setup data eda fit holdout cv fit-all select gates results clean
 
 all: setup eda fit-all holdout cv gates results
 
@@ -28,6 +28,9 @@ cv:             ## rolling-origin folds for the primary spec (cutoffs in config:
 
 fit-all:
 	@for s in $(SPECS); do $(MAKE) fit SPEC=$$s; done
+
+select:         ## compare candidates by PSIS-LOO -> outputs/model_selection.{json,md}
+	$(PY) -m mmm.select
 
 gates:          ## exits 1 if any blocking check fails
 	$(PY) -m mmm.gates

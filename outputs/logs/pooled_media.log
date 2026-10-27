@@ -1,0 +1,6 @@
+Sampling: [adstock_alpha, gamma_control, intercept_contribution, saturation_beta, saturation_lam, y, y_sigma]
+[pooled_media] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_control, adstock_alpha, saturation_lam, saturation_beta, intercept_contribution]
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[pooled_media] sampled in 10.2 min
+[pooled_media] NOT CONVERGED (R-hat max 1.0117 > 1.01; ESS bulk min 270 < 400); stopping without results -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/pooled_media

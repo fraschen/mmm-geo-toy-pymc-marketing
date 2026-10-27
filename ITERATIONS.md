@@ -30,7 +30,40 @@ Promo, organic and trend show no significant heterogeneity.
 | B. `hier_media` | partially pooled across geos | shared by all geos |
 | C. `hier_media_controls` | partially pooled across geos | partially pooled across geos |
 
-The selection protocol was fixed before fitting (README): converge or stop, select by PSIS-LOO with a preference
-for the simpler candidate within 2 SE, then holdout, CV, a prior-sensitivity refit and the gates.
+The selection protocol was fixed before fitting (README): a candidate that fails convergence is dropped (no
+reruns with more draws, user decision); select by PSIS-LOO with a preference for the simpler candidate within
+2 SE; then holdout, CV, a prior-sensitivity refit and the gates.
 
 **Status:** awaiting approval to fit.
+
+## 1. Candidates fitted: 4 × 1000 draws, tune 1000, `target_accept` 0.95
+
+| Candidate | Status | R-hat max | ESS bulk / tail | Divergences | Where it failed |
+|---|---|---|---|---|---|
+| A. `pooled_media` | not converged | 1.0117 | 270 / 447 | 0 | total media contribution and geo intercepts |
+| B. `hier_media` | **converged** | 1.0054 | 532 / 896 | 0 | n/a |
+| C. `hier_media_controls` | not converged | 1.0234 | 224 / 431 | 4 | control-effect hierarchy (`gamma_control_mu`, `_sigma`, `_offset`) |
+
+Prior predictive coverage was 100% for all three.
+
+**Selection (`make select`):** B is the only converged candidate, so it is selected by default. It was not
+compared on ELPD against anything. B: ELPD-LOO 4070.7 (SE 55.1), within-geo R² 0.156, MAPE 0.296, 94% interval
+coverage 0.948, no observations with Pareto k > 0.7.
+
+**Sampler diagnosis of the dropped candidates (diagnostics only, no results):**
+- **A** mixes slowly along total media against the 40 geo intercepts. With one effect size per channel for all
+  geos, more media requires every intercept to move down together.
+- **C** fails inside the control hierarchy. The EDA found strong cross-geo heterogeneity for competitor and
+  sentiment but none for promo, organic and trend. One non-centered hierarchy across controls in such different
+  regimes is a known source of poor geometry (non-centering helps weakly identified groups and hurts strongly
+  identified ones).
+
+**Caveat carried forward:** C was the candidate motivated by a data test. The selected model shares control
+effects across geos even though the competitor and sentiment effects vary by geo (I² 0.94, 0.88). The
+validation stage should check whether that shows up in residuals, and the README must state it as a limitation.
+
+**What could be done, and was not (protocol: no reruns):** C with partial pooling for competitor and sentiment
+only, or with centered control effects. A with more draws.
+
+**Next:** validate `hier_media` (13-week holdout, 3 rolling-origin CV folds, prior-sensitivity refit), then
+the gates. Awaiting approval.

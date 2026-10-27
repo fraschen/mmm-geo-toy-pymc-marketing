@@ -28,39 +28,40 @@ sampler:
   target_accept: 0.95
   random_seed: 20261027
 
-# The primary specification is what results/channel_results.csv reports.
-# The others exist only to test whether conclusions survive reasonable
-# alternative assumptions (do independent models agree?).
-primary_spec: geo_hierarchical
+# Candidates designed from the EDA alone (README, ITERATIONS entry 0). The primary spec is chosen
+# by the selection protocol after fitting (src/mmm/select.py); until then it is unset.
+primary_spec: hier_media
 specs:
-  pooled:
-    description: Media effects pooled across geos; pymc-marketing default global max scaling; geo intercepts; spend-share-informed effect priors.
-    l_max: 8
+  pooled_media:
+    description: Media and control effects shared by all geos (per-capita scale).
+    scaling: population
+    yearly_seasonality: null
+    l_max: 4
     adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
     saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
     beta_prior: spend_share
     beta_pooling: pooled
-  geo_hierarchical:
-    description: Same as pooled but media effect size partially pooled across geos (non-centred log-normal).
-    l_max: 8
+    control_pooling: pooled
+  hier_media:
+    description: Media effects partially pooled across geos; control effects shared.
+    scaling: population
+    yearly_seasonality: null
+    l_max: 4
     adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
     saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
     beta_prior: spend_share
     beta_pooling: hierarchical
-  prior_sensitivity:
-    description: Pooled, but equal (spend-agnostic) effect priors, longer and slower-decaying adstock, flatter saturation prior.
-    l_max: 12
-    adstock_alpha: {dist: Beta, alpha: 2, beta: 2}
-    saturation_lam: {dist: Gamma, alpha: 2, beta: 1}
-    beta_prior: equal
-    beta_pooling: pooled
-  hierarchical_prior_sensitivity:
-    description: Primary (partially pooled) structure with prior_sensitivity's priors -- equal effect anchors, longer slower-decaying adstock, flatter saturation prior.
-    l_max: 12
-    adstock_alpha: {dist: Beta, alpha: 2, beta: 2}
-    saturation_lam: {dist: Gamma, alpha: 2, beta: 1}
-    beta_prior: equal
+    control_pooling: pooled
+  hier_media_controls:
+    description: Media and control effects partially pooled across geos.
+    scaling: population
+    yearly_seasonality: null
+    l_max: 4
+    adstock_alpha: {dist: Beta, alpha: 1, beta: 3}
+    saturation_lam: {dist: Gamma, alpha: 3, beta: 1}
+    beta_prior: spend_share
     beta_pooling: hierarchical
+    control_pooling: hierarchical
 
 # Automated acceptance criteria. FAIL on any blocking check => the fit is not
 # client-ready and `make gates` exits non-zero. WARN => reportable with caveats.

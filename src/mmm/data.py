@@ -19,6 +19,7 @@ class ModelData:
     geo_column: str
     target_column: str
     revenue_per_kpi: float
+    population: pd.Series | None = None  # one value per geo (constant over time)
 
     @property
     def X(self) -> pd.DataFrame:
@@ -49,6 +50,7 @@ class ModelData:
             geo_column=self.geo_column,
             target_column=self.target_column,
             revenue_per_kpi=self.revenue_per_kpi,
+            population=self.population,
         )
 
 
@@ -119,5 +121,6 @@ def load(cfg: dict) -> tuple[ModelData, dict]:
         geo_column=geo,
         target_column=d["target_column"],
         revenue_per_kpi=float(raw[d["revenue_per_kpi_column"]].mean()),
+        population=raw.groupby(geo)["population"].first(),
     )
     return md, checks
