@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 from pymc_extras.prior import Prior
 from pymc_marketing.mmm import MMM, GeometricAdstock, LogisticSaturation
 from pymc_marketing.mmm.scaling import FixedScaling
 
+from .config import ROOT
 from .data import ModelData
 
 
@@ -114,6 +116,10 @@ def build(md: ModelData, spec: dict) -> MMM:
         model_config=model_config,
     )
     mmm.build_model(md.X, md.y)
+    if spec.get("lift_test"):
+        # calibration: each channel's saturation curve must reproduce the measured lift (x -> x + delta_x)
+        lift = pd.read_csv(ROOT / spec["lift_test"])
+        mmm.add_lift_test_measurements(lift[lift[geo].isin(md.df[geo].unique())])
     # original-scale deterministics used by mmm.summary / mmm.plot (no effect on sampling)
     registered = set(mmm.model.named_vars)
     mmm.add_original_scale_contribution_variable(var=[

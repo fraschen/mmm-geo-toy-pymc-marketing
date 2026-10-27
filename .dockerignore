@@ -1,0 +1,6 @@
+.venv/
+.venv-conda/
+artifacts/
+.git/
+**/__pycache__/
+.DS_Store

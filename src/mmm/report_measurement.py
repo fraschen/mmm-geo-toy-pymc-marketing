@@ -222,6 +222,126 @@ def fig_saturation(mmm, md, spec, chans, path):
     return {c: float(np.subtract(*np.quantile(lam.sel(channel=c).values.ravel(), [0.97, 0.03])) / pw) for c in chans}
 
 
+CAL_RUN = "hier_media_lift"
+
+
+def calibration_section(spec: str, chans: list[str]) -> str:
+    """Before/after comparison for the lift-test calibrated refit. Returns markdown ('' if the run is missing)."""
+    mpath = OUTPUTS / "specs" / CAL_RUN / "metrics.json"
+    if not mpath.exists():
+        return ""
+    cfg = load_config()
+    cal_cfg = cfg["calibration_specs"][CAL_RUN]
+    m_cal = json.loads(mpath.read_text())
+    if m_cal.get("status") != "converged":
+        return (f"## 5. Calibration with a hypothetical lift test\n\nThe calibrated refit did not converge "
+                f"({'; '.join(m_cal.get('convergence_failures', []))}), so it has no results.\n")
+    lift = pd.read_csv(ROOT / cal_cfg["lift_test"])
+    before = pd.read_csv(OUTPUTS / "specs" / spec / "channel_metrics.csv").set_index("channel").loc[chans]
+    after = pd.read_csv(OUTPUTS / "specs" / CAL_RUN / "channel_metrics.csv").set_index("channel").loc[chans]
+
+    # model-implied return on the test increment (sum over test geos of delta_y / sum of delta_x), per draw
+    var = "lift_measurements_model_estimated_lift_original_scale"
+    implied = {}
+    for label, run in (("uncalibrated", spec), ("calibrated", CAL_RUN)):
+        mmm, md, _ = load_fitted(CAL_RUN)          # model with the lift-test node
+        if run != CAL_RUN:                          # ...evaluated with the uncalibrated posterior
+            mmm_u, _, _ = load_fitted(spec)
+            post = mmm_u.idata.posterior.to_dataset()
+        else:
+            post = mmm.idata.posterior.to_dataset()
+        post = post[[v for v in post.data_vars if v in {rv.name for rv in mmm.model.free_RVs}]]
+        det = pm.compute_deterministics(post, var_names=[var], model=mmm.model, progressbar=False)[var]
+        other = [d for d in det.dims if d not in ("chain", "draw")]
+        implied[label] = (det.sum(other) / lift.delta_x.sum()).values.ravel()
+    # per-geo Channel4 ROI in the uncalibrated model: explains what the model expected in the test geos
+    mmm_u, md_u, _ = load_fitted(spec)
+    post_u = mmm_u.idata.posterior.to_dataset().isel(draw=slice(None, None, 8))
+    cc = pm.compute_deterministics(post_u, var_names=["channel_contribution_original_scale"], model=mmm_u.model,
+                                   progressbar=False)["channel_contribution_original_scale"]
+    ch_test = lift.channel.iloc[0]
+    geo_c = cc.sel(channel=ch_test).mean(("chain", "draw")).sum("date").to_series()
+    geo_s = md_u.df.groupby(md_u.geo_column)[ch_test].sum()
+    geo_roi = geo_c / geo_s
+    tg = lift[md_u.geo_column].tolist()
+    roi_test_geos = float(geo_c.loc[tg].sum() / geo_s.loc[tg].sum())
+    roi_other_geos = float(geo_c.drop(tg).sum() / geo_s.drop(tg).sum())
+    test_roi = float(lift.delta_y.sum() / lift.delta_x.sum())
+    test_se = float(np.sqrt((lift.sigma ** 2).sum()) / lift.delta_x.sum())
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 3.8), gridspec_kw={"width_ratios": [1.5, 1]})
+    ax = axes[0]
+    y = np.arange(len(chans))
+    for off, d, col, lab in ((-0.14, before, MUTED, "uncalibrated"), (0.14, after, SERIES[0], "calibrated with lift test")):
+        ax.hlines(y + off, d.roi_hdi94_low, d.roi_hdi94_high, color=col, lw=2)
+        ax.plot(d.roi_median, y + off, "o", ms=6, color=col, mec="white", mew=1, label=lab)
+    ax.axvline(1, color=MUTED, ls="--", lw=1)
+    ax.set_yticks(y, chans)
+    ax.invert_yaxis()
+    ax.set_xlabel("ROI (median and 94% HDI); dashed line = break-even", fontsize=8)
+    ax.legend(frameon=False, fontsize=8, loc="lower right")
+    title(ax, "Channel ROI before and after calibration", "the HYPOTHETICAL lift test covers Channel4 only")
+    style(ax, "x")
+    ax = axes[1]
+    for i, (lab, v) in enumerate(implied.items()):
+        lo_, hi_ = hdi(v)
+        ax.hlines(i, lo_, hi_, color=[MUTED, SERIES[0]][i], lw=2)
+        ax.plot(np.median(v), i, "o", ms=6, color=[MUTED, SERIES[0]][i], mec="white", mew=1)
+    ax.errorbar(test_roi, 2, xerr=1.96 * test_se, fmt="D", color=SERIES[1], ms=6, capsize=3)
+    ax.set_yticks([0, 1, 2], ["model, uncalibrated", "model, calibrated", "lift test (hypothetical)"])
+    ax.invert_yaxis()
+    ax.set_xlabel("Return on the test's extra Channel4 spend (revenue per $1)", fontsize=8)
+    title(ax, "What the test measured vs what the model implies", "test: ±1.96 SE; model: 94% HDI")
+    style(ax, "x")
+    save(fig, FIG / "meas_calibration.png")
+
+    rows = "\n".join(
+        f"| {c} | {before.loc[c, 'roi_median']:.2f} ({before.loc[c, 'roi_hdi94_low']:.2f}–{before.loc[c, 'roi_hdi94_high']:.2f}) | "
+        f"{after.loc[c, 'roi_median']:.2f} ({after.loc[c, 'roi_hdi94_low']:.2f}–{after.loc[c, 'roi_hdi94_high']:.2f}) | "
+        f"{before.loc[c, 'prob_roi_gt_1']:.2f} → {after.loc[c, 'prob_roi_gt_1']:.2f} | "
+        f"{before.loc[c, 'mroi_median']:.2f} → {after.loc[c, 'mroi_median']:.2f} |" for c in chans)
+    c_cal = m_cal["convergence"]
+    u, k = implied["uncalibrated"], implied["calibrated"]
+    return f"""## 5. Calibration with a hypothetical lift test
+
+> **The lift test here is invented.** No experiment exists for this dataset. It demonstrates how a real geo test
+> would enter the model and what it changes; its numbers are not evidence about Channel4.
+
+**Hypothetical test** ([`{cal_cfg['lift_test']}`](../{cal_cfg['lift_test']}), generated by `src/mmm/lift_test.py`): Channel4 spend
+raised 50% above each test geo's average weekly spend, in {len(lift)} geos across the size range. Result: the extra spend
+returned **{test_roi:.2f}** per $1 (standard error {test_se:.2f} pooled across geos). Channel4 was chosen because it is
+the largest budget whose payback the model could not determine.
+
+**How it enters the model:** pymc-marketing's `add_lift_test_measurements` adds a likelihood term requiring each test
+geo's Channel4 saturation curve to reproduce the measured lift between spend `x` and `x + delta_x`. The selected
+specification was refitted with this term (`{CAL_RUN}`): R-hat {c_cal['rhat_max']:.4f}, ESS {c_cal['ess_bulk_min']:.0f}, {c_cal['divergences']} divergences.
+
+![Calibration](figures/meas_calibration.png)
+
+| Channel | ROI uncalibrated (94% HDI) | ROI calibrated (94% HDI) | P(ROI > 1) | Marginal ROI |
+|---|---|---|---|---|
+{rows}
+
+**What changed.** Before calibration the model implied the test increment would return {np.median(u):.2f} per $1
+(94% HDI {hdi(u)[0]:.2f}–{hdi(u)[1]:.2f}); the test says {test_roi:.2f}. After calibration the model implies
+{np.median(k):.2f} ({hdi(k)[0]:.2f}–{hdi(k)[1]:.2f}): it moves toward the test, weighted by the test's precision
+against everything else the data says.
+
+**Why the model expected so much in the test geos.** Under partial pooling, {ch_test}'s ROI varies widely by geo in
+the uncalibrated model ({geo_roi.min():.2f} to {geo_roi.max():.2f}; median {geo_roi.median():.2f}). The test geos
+happen to include several the model rates highly: spend-weighted ROI {roi_test_geos:.2f} in the test geos vs
+{roi_other_geos:.2f} elsewhere. The test pulls those geos down, and through the shared hierarchy it pulls the
+channel's national ROI down too. Two lessons:
+- **Which geos are tested matters.** A real geo test should randomize or stratify its geo selection; a test in
+  other geos would have moved the estimate differently.
+- **Geo-level ROIs are not reliable.** With weak weekly signal (within-geo R² about 0.16), a spread this wide is
+  most likely the hierarchy fitting noise. Report national channel ROI, not geo-level ROI.
+
+Other channels change only through what they share with {ch_test} (the baseline and the hierarchy). A real test
+result goes into the same file format.
+"""
+
+
 def main() -> None:
     cfg = load_config()
     spec = cfg["primary_spec"]
@@ -460,6 +580,8 @@ as an upper bound, not a plan.
 - **Shared control effects.** The model assumes competitor and sentiment effects are the same in every geo,
   although the data says they differ (I² 0.94, 0.88). Both correlate with spend, so some of their geo-specific
   effect may be attributed to media.
+- **No geo-level ROI.** Geo-level effects vary widely in the model and are not reliable individually; use the
+  national channel results.
 - **Baseline vs media.** The data pins down total revenue better than its split between baseline and media;
   absolute contributions are less certain than channel rankings.
 - **Scenario, not forecast.** The reallocation replays last year's conditions. It assumes the response curves
@@ -467,6 +589,9 @@ as an upper bound, not a plan.
 - **Validation.** Lift tests (geo holdouts) on the largest budgets would calibrate these curves and are the most
   direct way to firm up the recommendations.
 """
+    cal = calibration_section(spec, chans)
+    if cal:
+        text = text.replace("## 5. Caveats for using these numbers", cal + "\n## 6. Caveats for using these numbers")
     (REPORTS / "measurement.md").write_text(text)
     print(f"wrote {REPORTS / 'measurement.md'}")
     print(json.dumps({k: {kk: v[kk] for kk in ('uplift_median', 'uplift_hdi94', 'prob_uplift_gt_0')} for k, v in results.items()}, indent=1))

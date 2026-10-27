@@ -99,3 +99,29 @@ signal); Channel0, Channel1 and Channel4 undetermined around break-even.
 **Budget scenario (last 52 weeks, budget-neutral):** ±20% per channel moves spend from Channel0, Channel1 and
 Channel4 (0.81×, 0.81×, 0.89×) to Channel2 and Channel3 (1.17×, 1.20×): +3.6M revenue (94% HDI +0.8M to +7.1M,
 P(gain > 0) = 0.98). ±50%: +7.2M (−0.2M to +16.0M, P = 0.96), extrapolating beyond observed spend.
+
+## 3. Calibration with a hypothetical lift test (`hier_media_lift`)
+
+**Hypothetical test** (`data/lift_tests/hypothetical_channel4.csv`, `src/mmm/lift_test.py`; invented, no real
+experiment exists): Channel4 spend +50% in 10 geos across the size range, measured return 0.60 per $1 (pooled SE
+0.11). Added with pymc-marketing's `add_lift_test_measurements`, then the selected spec was refitted.
+
+Converged: R-hat 1.0043, ESS 683, 0 divergences (12.5 min).
+
+| ROI median | Channel0 | Channel1 | Channel2 | Channel3 | Channel4 |
+|---|---|---|---|---|---|
+| uncalibrated | 0.79 | 0.69 | 2.12 | 1.67 | 1.10 |
+| calibrated | 0.78 | 0.72 | 2.25 | 1.73 | **0.68** |
+
+Channel4's P(ROI > 1) drops from 0.71 to 0.06. Before calibration the model implied the test increment would
+return 2.12 per $1 in the test geos (checked by hand from posterior parameters); after, 0.56 (0.36–0.76).
+
+**Finding:** under partial pooling, Channel4's geo-level ROI ranges 0.16–6.12 (median 0.50). The test geos
+happen to include several the model rated highly (2.16 spend-weighted vs 0.80 elsewhere), which is why the test
+moved the national estimate so much. Geo-level ROIs are not reliable individually, and a real test should
+randomize or stratify its geo selection.
+
+**Reproducibility:** `make all` runs the whole pipeline in one command; a `Dockerfile` (`make docker`) builds the
+pinned environment. Verified in the container: the image builds; setup and EDA reproduce the local outputs;
+MCMC sampling runs (a 2-chain × 100-draw smoke fit sampled in 2.7 min and, as expected at that length, was
+stopped by the convergence rule).

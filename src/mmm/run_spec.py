@@ -27,7 +27,7 @@ import pymc as pm
 import xarray as xr
 
 from . import data, model
-from .config import ARTIFACTS, OUTPUTS, load_config
+from .config import ARTIFACTS, OUTPUTS, load_config, spec_config
 
 HDI = 0.94
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -151,7 +151,7 @@ def fit_quality(mmm, md: data.ModelData, ypp_scaled: xr.DataArray) -> tuple[dict
 def loo(mmm, idata) -> dict:
     with mmm.model:
         pm.compute_log_likelihood(idata, extend_inferencedata=True, progressbar=False)
-    res = az.loo(idata, pointwise=True)
+    res = az.loo(idata, pointwise=True, var_name="y")  # score revenue only, not lift-test measurements
     k = np.asarray(res.pareto_k).ravel()
     summary = {"elpd_loo": float(res.elpd), "elpd_loo_se": float(res.se), "pareto_k_bad_share": float((k > 0.7).mean())}
     # pointwise ELPD per (date, geo): lets model selection compute the SE of an ELPD difference
@@ -251,7 +251,7 @@ def main(argv=None) -> None:
     args = ap.parse_args(argv)
 
     cfg = load_config()
-    spec = cfg["specs"][args.spec]
+    spec = spec_config(cfg, args.spec)
     s = dict(cfg["sampler"])
     if args.quick:
         s.update(chains=2, tune=100, draws=100)

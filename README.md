@@ -41,20 +41,35 @@ spend; Channel0, 18.5%), calibrated into the model, and the next-step model fixe
 
 ## Reproduce
 
+**One command** (needs `uv`; about 3 hours on an 8-core laptop, mostly MCMC):
+
 ```bash
-make setup     # fetch + checksum the data, create .venv from requirements.lock (needs uv)
+make all
+```
+
+**Or in Docker** (no local Python needed; writes `outputs/` and `reports/` into the working copy):
+
+```bash
+make docker      # = docker build -t mmm-geo . && docker run --rm -v $PWD/outputs:/app/outputs -v $PWD/reports:/app/reports mmm-geo
+```
+
+`make all` runs these steps in order; each can also be run on its own:
+
+```bash
+make setup     # fetch + checksum the data, create .venv from requirements.lock
 make eda       # exploratory analysis -> outputs/eda/ (summary JSON + figures)
 make fit-all   # fit the candidate specifications
 make select    # pick the specification by the protocol -> outputs/model_selection.md
 make holdout   # refit the selected spec without the last 13 weeks and score the forecast
 make cv        # rolling-origin CV folds for the selected spec (train to week 104/117/130, forecast 13)
+make calibrate # refit the selected spec with the hypothetical lift test
 make gates     # automated acceptance checks; exits 1 if any blocking check fails
-make results   # outputs/channel_results.csv + metadata + ROI figure
-make reports   # reports/diagnostics.md (model health) and reports/measurement.md (channel results, scenario)
+make results   # outputs/channel_results.csv + metadata
+make reports   # reports/diagnostics.md (model health) and reports/measurement.md (results, scenario, calibration)
 ```
 
-Everything in `outputs/` is a deterministic function of `config/pipeline.yaml`, the checksummed data and
-`requirements.lock`. MCMC is seeded.
+Everything in `outputs/` and `reports/` is a deterministic function of `config/pipeline.yaml`, the checksummed data
+and `requirements.lock`. MCMC is seeded.
 
 ## Data
 
@@ -135,6 +150,7 @@ and were dropped without results ([`outputs/model_selection.md`](outputs/model_s
 | [`reports/measurement.md`](reports/measurement.md) | Channel ROI, marginal ROI and contribution with credible intervals; revenue decomposition; response curves; budget reallocation scenario |
 | [`outputs/channel_results.csv`](outputs/channel_results.csv) | One row per channel for downstream use; column definitions in `outputs/channel_results_metadata.json` |
 | [`outputs/budget_scenario.csv`](outputs/budget_scenario.csv) | Main reallocation scenario per channel; both scenarios in `budget_scenario.json` |
+| [`reports/measurement.md`](reports/measurement.md), section 5 | Calibration with a **hypothetical** Channel4 lift test (`data/lift_tests/`): how a real geo test would enter the model and move its estimates |
 
 ![Channel ROI](reports/figures/meas_roi.png)
 
@@ -182,8 +198,10 @@ From the EDA alone:
 
 ## Next steps
 
-1. **Lift tests** (geo holdouts) on Channel4 and Channel0, the largest budgets with undetermined payback,
-   calibrated into the model. This is also the only fix for the baseline–media trade-off.
+1. **Real lift tests** (geo holdouts) on Channel4 and Channel0, the largest budgets with undetermined payback.
+   The calibration machinery is in place and demonstrated with a hypothetical test (`make calibrate`); a real
+   result goes into the same file format (`geo, channel, x, delta_x, delta_y, sigma`). Tests are also the only fix
+   for the baseline–media trade-off.
 2. **Geo-varying effects for competitor sales and sentiment only.** The EDA shows these two control effects vary
    by geo (I² 0.94 and 0.88), while promo, organic and trend do not. Both are confounders of spend, so sharing
    them across geos can bias media ROI. pymc-marketing's `ControlMuEffect` can add them as a separate term with a
@@ -212,7 +230,9 @@ src/mmm/gates.py              automated acceptance -> outputs/gate_report.{json,
 src/mmm/results.py            channel results file
 src/mmm/fitted.py             rebuild a fitted model from its saved posterior
 src/mmm/report_diagnostics.py model health report -> reports/diagnostics.md
-src/mmm/report_measurement.py measurement report and budget scenario -> reports/measurement.md
+src/mmm/report_measurement.py measurement report, budget scenario, calibration -> reports/measurement.md
+src/mmm/lift_test.py          the hypothetical lift test -> data/lift_tests/hypothetical_channel4.csv
+Dockerfile                    reproducible environment; `make docker` runs the full pipeline
 scripts/fetch_data.sh         download + checksum the dataset
 ITERATIONS.md                 log of model runs, results and modeling decisions
 ```

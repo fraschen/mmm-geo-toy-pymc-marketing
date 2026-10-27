@@ -7,7 +7,7 @@ import xarray as xr
 from pymc_marketing.mmm import MMM
 
 from . import data, model
-from .config import ARTIFACTS, load_config
+from .config import ARTIFACTS, load_config, spec_config
 
 
 def load_fitted(spec: str, train_weeks: int | None = None, holdout: bool = False):
@@ -18,7 +18,7 @@ def load_fitted(spec: str, train_weeks: int | None = None, holdout: bool = False
     if holdout or train_weeks:
         md, test = md.split(cfg["data"]["holdout_weeks"], train_weeks=train_weeks)
     run = spec + ("__holdout" if holdout else "") + (f"__cv{train_weeks}" if train_weeks else "")
-    mmm = model.build(md, cfg["specs"][spec])
+    mmm = model.build(md, spec_config(cfg, spec))
     idata = xr.open_datatree(ARTIFACTS / run / "posterior.nc").load()
     groups = {g: idata[g].to_dataset() for g in idata.children}
     # The saved file keeps parameters only; the model's inputs are fully determined by the rebuilt model.

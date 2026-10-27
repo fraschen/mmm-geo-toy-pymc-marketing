@@ -1,0 +1,13 @@
+Sampling: [adstock_alpha, gamma_control, intercept_contribution, lift_measurements, saturation_beta_raw_mu, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_lam, y, y_sigma]
+[hier_media_lift] prior predictive coverage 100.00%
+NUTS[numpyro]: [y_sigma, gamma_control, adstock_alpha, saturation_lam, saturation_beta_raw_offset, saturation_beta_raw_sigma, saturation_beta_raw_mu, intercept_contribution]
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+[hier_media_lift] sampled in 7.7 min
+Sampling: [lift_measurements, y]
+[hier_media_lift] done in 12.5 min -> /Users/fs/code/mmm-geo-toy-pymc-marketing/outputs/specs/hier_media_lift
+ channel  roi_median  roi_hdi94_low  roi_hdi94_high  mroi_median  roi_prior_contraction
+Channel0        0.78           0.24            1.38         0.64                   0.93
+Channel1        0.72           0.19            1.25         0.65                   0.92
+Channel2        2.25           1.60            2.86         1.62                   0.73
+Channel3        1.73           1.22            2.27         1.47                   0.94
+Channel4        0.68           0.39            1.01         0.58                   0.95

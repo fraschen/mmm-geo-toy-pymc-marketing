@@ -63,6 +63,12 @@ specs:
     beta_pooling: hierarchical
     control_pooling: hierarchical
 
+# Calibration runs: the selected spec refitted with lift-test measurements. Not selection candidates.
+calibration_specs:
+  hier_media_lift:
+    base: hier_media
+    lift_test: data/lift_tests/hypothetical_channel4.csv   # HYPOTHETICAL test, see src/mmm/lift_test.py
+
 # Automated acceptance criteria. FAIL on any blocking check => the fit is not
 # client-ready and `make gates` exits non-zero. WARN => reportable with caveats.
 # Convergence thresholds follow current practice (Vehtari et al. 2021: R-hat<=1.01,
